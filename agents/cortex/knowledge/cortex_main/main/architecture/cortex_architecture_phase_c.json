@@ -1,0 +1,186 @@
+{
+  "_meta": {
+    "description": "CORTEX architecture graph — Phase C (Venture Machine). One entry per component. Consumed by FAISS for on-demand architecture recall. Updated at end of each Phase build.",
+    "phase": "C",
+    "built": "2026-03-25",
+    "how_to_use": "Query FAISS with 'architecture', 'how does X work', 'what calls Y', 'where is Z defined' to retrieve relevant entries."
+  },
+  "components": [
+    {
+      "id": "VentureDNA",
+      "file": "python/helpers/cortex_venture_dna.py",
+      "type": "dataclass",
+      "phase": "C-1",
+      "description": "Core living knowledge entity for a venture. 8-dimension CVS scoring, health pulse, two SurfSense spaces, disk persistence.",
+      "key_classes": ["VentureDNA", "CVSScore", "VentureHealthPulse", "FailurePattern", "CrossVenturePattern", "MarketIntelligence", "CompetitorProfile", "ICP", "ResearchSnapshot"],
+      "exposes": ["to_dict", "to_json", "brief_summary(max_chars=200)", "render_cvs()", "compute_health_pulse()", "update_cvs(**dims)", "recompute_research_certainty()", "add_insight()", "add_open_question()", "resolve_question()", "log_refinement()"],
+      "consumed_by": ["venture_create.py", "venture_manage.py", "_07_venture_context.py", "cortex_surfsense_router.py", "cortex_venture_discovery.py"],
+      "persistence": "usr/memory/cortex_main/ventures/{safe_name}.json — via save_venture() / load_venture() / list_ventures() module functions",
+      "surfsense_spaces": "surfsense_dna_space_name = cortex_venture_{name}_dna, surfsense_ops_space_name = cortex_venture_{name}_ops",
+      "cvs_dimensions": {
+        "weighted_composite": ["market_size (0.25)", "problem_severity (0.30)", "solution_uniqueness (0.20)", "implementation_ease (0.15)", "distribution_clarity (0.10)"],
+        "cortex_advantage_unweighted": ["risk_level", "ai_setup_autonomy", "ai_run_autonomy"],
+        "computed": ["research_certainty"],
+        "thresholds": "AUTO_PROCEED>=75, REVIEW>=60, CONDITIONAL>=35, DISCARD<35"
+      },
+      "failure_pattern": "FailurePattern schema defined but DORMANT in Phase C — activates Phase G epistemic flywheel",
+      "cross_venture": "CrossVenturePattern — output of synthesize_cross_venture_patterns() — pushed to cortex_cross_venture SurfSense space"
+    },
+    {
+      "id": "OutcomeLedger",
+      "file": "python/helpers/cortex_outcome_ledger.py",
+      "type": "class + module functions",
+      "phase": "C-2",
+      "description": "Thread-safe SQLite-backed ledger for venture outcomes, decisions, and Kelly capital signals.",
+      "key_classes": ["OutcomeLedger", "OutcomeEvent", "HITLLogEntry", "DecisionEvent", "KellySignal"],
+      "key_functions": ["calculate_expected_value()", "calculate_kelly_fraction(fractional=0.5, cap=0.25)", "calculate_variance()", "get_ledger(agent)"],
+      "db_path": "usr/memory/cortex_main/cortex_ledger.db — derived from agent_memory_subdir via get_ledger(agent)",
+      "tables": ["outcome_events", "hitl_log", "decision_events", "kelly_signals"],
+      "singleton": "get_ledger(agent) — process-wide singleton keyed by db_path",
+      "kelly_math": "Ported from omnis_v12_JARVIS kelly_mathematical_framework.py. Full Kelly + half-Kelly. EV formula: p*(Rs-C) + (1-p)*(Rf-C). Kelly fraction capped at 25%.",
+      "record_venture_creation": "Convenience method — call at CONFIRMATION step with VentureDNA instance. Records DecisionEvent with CVS at time of decision.",
+      "consumed_by": ["venture_create.py (CONFIRMATION step)", "venture_manage.py (kelly + health actions)"]
+    },
+    {
+      "id": "CortexVentureScanner",
+      "file": "python/helpers/cortex_venture_discovery.py",
+      "type": "class + module functions",
+      "phase": "C-3",
+      "description": "Domain-agnostic market research scanner. Tier 1 (Tavily+Exa via orchestrator) and Tier 2 (Perplexity). Gap analysis, cost gate, TrendReport→VentureDNA bridge.",
+      "key_classes": ["CortexVentureScanner", "TrendReport", "KeywordInsight", "ResearchGap"],
+      "key_methods": ["scan_tier1(niche, market, language, context)", "scan_tier2(niche, market, language, tier1_report, manual_override)", "analyze_gaps(report) -> List[ResearchGap]", "needs_tier2(report, gap_confidence_threshold=0.6)"],
+      "gap_analysis": "analyze_gaps() calls DeepSeek V3.2 to identify unanswered questions. Returns ResearchGap list. High-importance gaps trigger Tier 2.",
+      "tier2_gate": "should_gate_tier2() returns (should_gate, estimated_cost). Gate fires if est_cost > $0.10. Manual 'use tier 2' bypasses gate.",
+      "dna_bridge": "merge_trend_report_into_dna(dna, report) — merges TrendReport into VentureDNA: updates market_intelligence, competitor_profiles, open_questions, adds ResearchSnapshot, recomputes research_certainty",
+      "consumed_by": ["venture_create.py (EXPLORATION and TIER2_RESEARCH steps)"]
+    },
+    {
+      "id": "VentureCreateTool",
+      "file": "python/tools/venture_create.py",
+      "type": "Agent Zero Tool",
+      "phase": "C-4",
+      "description": "9-step iterative venture creation flow. LLM calls this tool; state persisted via agent.set_data('venture_creation_session', dict).",
+      "actions": {
+        "start": "venture_name + description → parse brief → pull L1/L2/L3 memory → Tier 1 research → gap analysis → first brain-picking question",
+        "continue": "handles all mid-flow steps: brain-picking answers, tier2 gate, synthesis review, iteration feedback, crystallization review",
+        "use_tier2": "force Tier 2 regardless of gate",
+        "skip_tier2": "skip Tier 2, go straight to synthesis",
+        "confirm": "CONFIRMATION step — persist DNA, create SurfSense spaces, push Graphiti episode, record to OutcomeLedger, trigger cross-venture synthesis, set active venture",
+        "cancel": "clear session, no data saved",
+        "status": "show current phase and progress"
+      },
+      "state_key": "agent.set_data('venture_creation_session', {...}) — persists across turns",
+      "creation_flow": [
+        "INITIATION: parse brief, pull memory context",
+        "EXPLORATION: Tier 1 research via CortexVentureScanner",
+        "BRAIN_PICKING: ask user gap-filling questions one by one",
+        "TIER2_GATE: show cost estimate if confidence<0.6 and est_cost>$0.10",
+        "TIER2_RESEARCH: deep Perplexity research on high-importance gaps",
+        "SYNTHESIS: build VentureDNA + score CVS via DeepSeek + CORTEX capability lens",
+        "ITERATION: user feedback → refine → up to 3 iterations",
+        "CRYSTALLIZATION: finalize DNA, render CVS visual + health pulse",
+        "CONFIRMATION: persist all, create spaces, push everywhere"
+      ],
+      "cortex_capability_lens": "_apply_capability_lens() — scores ai_setup_autonomy, ai_run_autonomy, risk_level by evaluating venture through CORTEX's actual tool capabilities",
+      "confirmation_side_effects": [
+        "save_venture(dna, agent) → disk",
+        "OutcomeLedger.record_venture_creation(dna)",
+        "CortexSurfSenseClient.ensure_spaces_exist([dna_space, ops_space])",
+        "CortexGraphitiClient.add_episode(venture creation episode)",
+        "DeferredTask(_run_cross_venture_synthesis) — background",
+        "agent.set_data('active_venture', dna.venture_id)",
+        "agent.set_data('active_venture_name', dna.name)"
+      ],
+      "depends_on": ["cortex_venture_dna.py", "cortex_outcome_ledger.py", "cortex_venture_discovery.py", "cortex_model_router.py", "cortex_surfsense_client.py", "cortex_graphiti_client.py", "cortex_ingestion_schema.py"]
+    },
+    {
+      "id": "VentureManageTool",
+      "file": "python/tools/venture_manage.py",
+      "type": "Agent Zero Tool",
+      "phase": "C-5",
+      "description": "Venture management: list, status, health pulse, activate, deactivate, delete, CVS visual, Kelly signal.",
+      "actions": ["list", "status [name]", "health [name]", "activate <name>", "deactivate", "delete <name>", "cvs [name]", "kelly [name]"],
+      "active_venture_fallback": "If no venture_name given, uses agent.get_data('active_venture_name'). Falls back to most recently modified venture.",
+      "depends_on": ["cortex_venture_dna.py", "cortex_outcome_ledger.py"]
+    },
+    {
+      "id": "VentureContextExtension",
+      "file": "python/extensions/monologue_start/_07_venture_context.py",
+      "type": "Agent Zero Extension (hook: monologue_start)",
+      "phase": "C-6",
+      "description": "Injects active venture DNA summary (200 chars) into loop_data.extras_persistent['cortex_venture_context'] every turn.",
+      "execution_order": "Runs after _05_self_model_load.py (which loads self-model + Tier 0 SurfSense index)",
+      "data_injected": "VentureDNA.brief_summary(200) + CVS score + open question count + AI autonomy scores + SurfSense space names",
+      "trigger": "agent.get_data('active_venture_name') must be non-empty",
+      "cost": "One disk read per turn when venture is active. Negligible."
+    },
+    {
+      "id": "SurfSenseRouterVentureUpdate",
+      "file": "python/helpers/cortex_surfsense_router.py",
+      "type": "static class + module constants",
+      "phase": "C-7",
+      "description": "Updated with two-space venture routing. venture_dna_space(name) and venture_ops_space(name) return correct space names. route_for_push() now routes ops_doc=True to ops space.",
+      "new_methods": ["venture_dna_space(venture_name)", "venture_ops_space(venture_name)", "get_venture_spaces_for_active(agent)"],
+      "push_routing": "document metadata.ops_doc=True → ops space. Default → dna space. Credentials never pushed.",
+      "space_naming": "cortex_venture_{safe_name}_dna and cortex_venture_{safe_name}_ops. safe_name = lowercase alphanum, underscores, max 40 chars."
+    },
+    {
+      "id": "CrossVentureSynthesis",
+      "file": "python/helpers/cortex_venture_dna.py (synthesize_cross_venture_patterns function)",
+      "type": "async function + DeferredTask in venture_create.py",
+      "phase": "C-8",
+      "description": "After each venture CONFIRMATION, background task synthesizes patterns across all ventures via DeepSeek V3.2 and pushes to cortex_cross_venture SurfSense space.",
+      "trigger": "venture_create.py CONFIRMATION step → DeferredTask(_run_cross_venture_synthesis, all_ventures, agent)",
+      "output": "List[CrossVenturePattern] — pushed to cortex_cross_venture SurfSense space",
+      "minimum_ventures": "2 ventures required to synthesize",
+      "pattern_types": ["market_overlap", "skill_reuse", "risk_correlation", "opportunity"]
+    }
+  ],
+  "data_flows": {
+    "venture_creation_confirmation": [
+      "1. VentureDNA.to_json() → disk (usr/memory/cortex_main/ventures/{name}.json)",
+      "2. OutcomeLedger.record_venture_creation(dna) → SQLite (cortex_ledger.db) decision_events table",
+      "3. CortexSurfSenseClient.ensure_spaces_exist([dna_space, ops_space]) → SurfSense REST API",
+      "4. CortexGraphitiClient.add_episode() → Zep Cloud API",
+      "5. DeferredTask → synthesize_cross_venture_patterns() → SurfSense cortex_cross_venture space",
+      "6. agent.set_data('active_venture', id) + agent.set_data('active_venture_name', name)"
+    ],
+    "per_turn_venture_context": [
+      "monologue_start/_07_venture_context.py fires",
+      "→ load_venture(active_venture_name) → disk read",
+      "→ dna.brief_summary(200) + CVS + autonomy scores",
+      "→ loop_data.extras_persistent['cortex_venture_context'] = context_block",
+      "→ injected into system prompt by Agent Zero extras_persistent mechanism"
+    ],
+    "surfsense_push_venture_doc": [
+      "Document metadata: {category, venture, ops_doc}",
+      "CortexSurfSenseRouter.route_for_push(doc) → [primary_space, venture_dna_or_ops_space]",
+      "CortexSurfSenseClient.push_document(space, doc) → POST /api/v1/documents",
+      "CortexSurfSenseRouter.update_routing_index(agent, space, 1) → local JSON index"
+    ]
+  },
+  "extension_order_phase_c": {
+    "monologue_start": [
+      "_05_self_model_load.py — loads self-model JSON + Tier 0 SurfSense routing index",
+      "_07_venture_context.py (NEW C-6) — injects active venture DNA summary"
+    ],
+    "monologue_end": [
+      "_10_knowledge_extraction.py — entity/fact extraction → FAISS",
+      "_15_graphiti_update.py — forward entities to Graphiti L2",
+      "_60_struggle_detect.py — detect hedging → flag knowledge gaps"
+    ],
+    "message_loop_prompts_after": [
+      "_15_temporal_memory.py — FAISS recall → extras_persistent",
+      "_17_personality_model.py — personality + commitments",
+      "_18_graphiti_pull.py — Graphiti L2 search (with trivial-query gate)",
+      "_20_surfsense_pull.py — SurfSense L3 pull (3 spaces, 10 docs, keyword scoring, top 5)"
+    ],
+    "process_chain_end": [
+      "_10_surfsense_push.py — session summarize → push to SurfSense (every 20 exchanges)"
+    ],
+    "system_prompt": [
+      "_05_cortex_identity.py — self-model + dynamic context injection",
+      "_07_trust_level.py — trust level"
+    ]
+  }
+}

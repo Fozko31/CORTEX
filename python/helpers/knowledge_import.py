@@ -2,6 +2,59 @@ import glob
 import os
 import hashlib
 from typing import Any, Dict, Literal, TypedDict
+
+# CRITICAL: Patch LangChain BEFORE importing TextLoader
+# Fix: chardet.detect() returns {encoding, confidence, language, mime_type}
+# but FileEncoding only accepts {encoding, confidence, language}
+def _patch_langchain_encoding_detection():
+    """
+    Monkey patch for langchain_community 0.4.1 bug with chardet and FileEncoding.
+    Must be called BEFORE importing TextLoader.
+    """
+    from langchain_community.document_loaders.helpers import FileEncoding
+    import concurrent.futures
+    import chardet
+    
+    # Patch both helpers and text modules
+    from langchain_community.document_loaders import helpers
+    from langchain_community.document_loaders import text
+    
+    def detect_file_encodings_fixed(file_path, timeout=5):
+        """Detect encoding, stripping mime_type that FileEncoding doesn't accept."""
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            def read_and_detect(file_path):
+                with open(file_path, "rb") as f:
+                    raw_data = f.read()
+                    result = chardet.detect(raw_data)
+                    # Filter to only FileEncoding-accepted fields
+                    return {
+                        "encoding": result.get("encoding"),
+                        "confidence": result.get("confidence", 0.0),
+                        "language": result.get("language")
+                    }
+            
+            future = executor.submit(read_and_detect, file_path)
+            try:
+                encoding_dict = future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                raise TimeoutError(
+                    f"Timeout reached while detecting encoding for {file_path}"
+                )
+        
+        if encoding_dict.get("encoding") is None:
+            raise RuntimeError(f"Could not detect encoding for {file_path}")
+        
+        # Return list with single FileEncoding object
+        return [FileEncoding(**encoding_dict)]
+    
+    # Replace in both modules
+    helpers.detect_file_encodings = detect_file_encodings_fixed
+    text.detect_file_encodings = detect_file_encodings_fixed
+
+# Apply patch immediately
+_patch_langchain_encoding_detection()
+
+# NOW safe to import TextLoader
 from langchain_community.document_loaders import (
     CSVLoader,
     PyPDFLoader,
