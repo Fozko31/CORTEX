@@ -1075,9 +1075,11 @@ async def synthesize_cross_venture_patterns(ventures: List[VentureDNA], agent=No
 
     try:
         from python.helpers.cortex_model_router import CortexModelRouter
-        result = await CortexModelRouter.call_async("classification", prompt)
-        import dirtyJson
-        raw = dirtyJson.loads(result) if isinstance(result, str) else result
+        result = await CortexModelRouter.call_routed_model(
+            "classification", "You are a cross-venture pattern analyst.", prompt, agent
+        )
+        from python.helpers.dirty_json import DirtyJson
+        raw = DirtyJson.parse_string(result) if isinstance(result, str) else result
         if not isinstance(raw, list):
             raw = raw.get("patterns", []) if isinstance(raw, dict) else []
 

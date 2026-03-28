@@ -70,6 +70,20 @@ class CortexStruggleDetect(Extension):
                 "severity": severity,
             })
 
+            # Phase G: persist to SQLite event store for Loop 1 aggregation
+            try:
+                from python.helpers import cortex_event_store as _es
+                session_id = str(getattr(agent, "id", ""))
+                _es.log_struggle(
+                    topic=topic,
+                    severity=severity,
+                    signals=struggle_signals,
+                    context_snippet=user_msg[:300],
+                    session_id=session_id,
+                )
+            except Exception:
+                pass
+
             await _offer_help(agent, topic, struggle_signals, loop_data)
 
         except Exception:

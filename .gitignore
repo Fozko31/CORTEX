@@ -40,3 +40,25 @@ agent_history.gif
 
 .agent/**
 .claude/**
+
+# CORTEX profile credentials — sensitive values in settings.json, never commit
+agents/cortex/settings.json
+
+# Virtual environment (venv, not .venv)
+venv/
+
+# Runtime logs and temp files
+server.log
+tmp_*.py
+tmp_*.txt
+tests_test_*_out.txt
+
+# Root-level scratch test scripts (not the real test suite)
+/test_d_integration.py
+/test_phase_c.py
+/test_python_diagnosis.py
+/test_tier1_quick.py
+
+# Ruflo / Claude internal tooling
+.swarm/
+.claude-flow/

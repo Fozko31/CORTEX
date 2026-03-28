@@ -246,4 +246,161 @@ All key decisions made during CORTEX development. Each entry has context, the de
 2. `C:\Users\Admin\omnis_v12_JARVIS\omnis_ai\modules\kelly_mathematical_framework.py` — Kelly Criterion capital allocation (pure math, fully portable)
 3. CVS scoring formula from `omnis_v12_JARVIS\omnis_ai\modules\omnis_fractal_productization_module.py`
 **Key files in VERDENT:** dna.py, creation_flow.py, creation_prompts.py, outcome_ledger.py, productization.py, epistemic_idle_loop.py, feedback_loop.py, self_optimizer.py, venture_templates.py
+
+---
+
+## D-030 — Three-Pillar Framework: One System, Three Modes
+**Date:** 2026-03-25
+**Decision:** CORTEX operates as ONE system in three modes: Venture Creation (Phase C), Venture Discovery (Phase D), Venture Operations (Phase F). They share the same memory stack, CVS scoring engine, research infrastructure, and SurfSense spaces. What differs: who initiates the loop and how much human confirmation is required before execution.
+**Rationale:** Building three separate systems would duplicate infrastructure and fragment memory. The unified system means Discovery candidates flow directly into Creation with no research wasted, and created ventures flow directly into Operations with full DNA context.
+
+---
+
+## D-031 — Phase D: Venture Discovery Replaces Old Phase D Meta-Intelligence
+**Date:** 2026-03-25
+**Decision:** Old Phase D (Meta-Intelligence: DSPy, self-optimization, SOUL.md) moved to Phase G (Self-Improvement Loop). Phase D is now Venture Discovery. Build order: C → D (Discovery) → E (Background Processes) → F (Operations) → G (Self-Improvement) → H (Full Autonomy).
+**Rationale:** Discovery is the natural next capability after Creation. It extends Phase C infrastructure without new architectural dependencies. Self-improvement requires a proven, stable system to improve — that means waiting until Phase F delivers the Operations layer.
+
+---
+
+## D-032 — Venture Discovery: Interactive Parameter Session Before Autonomous Run
+**Date:** 2026-03-25
+**Decision:** Mode 2 (autonomous discovery) always preceded by Mode 1 (interactive parameter design session, ~10 minutes). User free-flows ideas → CORTEX iterates with quick research → crystallizes `VentureDiscoveryParameters` object. Parameters saved to disk, reused indefinitely until explicitly updated.
+**Rationale:** Without tight parameters, autonomous discovery generates high-noise, low-value candidates. The 10-minute interactive session is not overhead — it multiplies the quality of every autonomous cycle that follows. Parameters define: market_domains, geography, min_cvs_score (default 45), min_ai_run_autonomy (default 50), max_capital_requirement, languages, excluded_domains.
+
+---
+
+## D-033 — Metrics Hierarchy: Two-Layer Architecture
+**Date:** 2026-03-25
+**Decision:** CORTEX operates with two metric layers simultaneously:
+1. **Human-readable direction** (priority order): Profit → Automation → Growth → Exceptionalism. Hard constraints: never harm users, safety before automation, force of good.
+2. **Machine-measurable KPIs** (tracked automatically in OutcomeLedger): revenue per venture/month, CVS score at creation vs 90d later, AI autonomy execution rate, discovery-to-creation conversion rate, Kelly fraction utilization, struggle detect rate trend.
+**Rationale:** "Profit + growth" is too vague for machine optimization. But reducing everything to numbers loses the directional judgment needed for complex decisions. Both layers are necessary. Machine tracks KPIs, human tracks direction.
+
+---
+
+## D-034 — Autonomy Unlocking: Per-Decision-Type with Monitoring + Alerting
+**Date:** 2026-03-25
+**Decision:** Venture autonomy is unlocked per-decision-type, not per-venture globally. Process: CORTEX recommends → user observes pattern → user grants autonomy for that specific decision type → CORTEX executes autonomously + logs every decision → alert fires if deviation from established pattern exceeds threshold. `autonomy_level` field in VentureDNA tracks which decision types are autonomous.
+**Rationale:** Global venture autonomy is too coarse. A venture might be safe to run pricing experiments autonomously but still require human confirmation on outreach copy. Per-decision-type unlocking matches how trust is actually earned and maintained.
+
+---
+
+## D-035 — Background Processes: Off-Hours Only, Session Mutex, Budget Capped
+**Date:** 2026-03-25
+**Decision:** All autonomous background processes run 1-6am CET by default. A session mutex prevents any background job from running while user session is active. Every job has a hard budget cap (e.g., $3.00/night for discovery). These three constraints are non-negotiable for all background processes.
+**Rationale:** Off-hours avoids competing with user's active sessions for API quota. Session mutex prevents memory contamination and context confusion during active work. Budget cap prevents runaway spending from edge cases (infinite loops, bad parameters, API cost spikes).
+
+---
+
+## D-036 — Memory Backup: All Three Layers, Single Location, Automated
+**Date:** 2026-03-25
+**Decision:** All three memory layers backed up automatically:
+- L1 FAISS: daily rsync → B2/OneDrive (`cortex-backups/l1_faiss/`)
+- L2 Graphiti: weekly Zep export API → JSON → B2 (`cortex-backups/l2_graphiti/`)
+- L3 SurfSense: daily pg_dump → compress → B2 (`cortex-backups/l3_surfsense/`)
+All in single `cortex-backups/` directory. 30-day daily + 12-week weekly retention. Practically free (< $1/month storage).
+**Rationale:** Memory is CORTEX's identity and competitive advantage. L1+L2+L3 together represent accumulated intelligence, temporal relationships, and session history. Loss of any layer is partial loss of identity. Automated backup is the system's lifeline.
+
+---
+
+## D-037 — Self-Improvement Loop: Memory Isolation Required Before Experiments
+**Date:** 2026-03-25
+**Decision:** Experiment runs write to `usr/memory/cortex_main_test/` namespace, NEVER to `usr/memory/cortex_main/`. Test namespace is wiped after every experiment. Implementation: `memory_ns="test"` flag in all memory write calls routes to test path. Isolation must be built (G-1) before any self-improvement experiment runs.
+**Rationale:** If experimental CORTEX runs 30 test queries and writes to live memory, it contaminates production with synthetic test data. Live CORTEX then recalls test data as if real session history. This degrades real-world performance and corrupts the memory that makes CORTEX valuable. Memory isolation is a non-negotiable prerequisite for Phase G.
+
+---
+
+## D-038 — Self-Improvement Judge: DeepSeek Primary + Claude Spot-Check
+**Date:** 2026-03-25
+**Decision:** Judge pipeline for self-improvement experiments: DeepSeek V3.2 evaluates all outputs against rubric (~$0.001/evaluation). Claude Sonnet 4.6 cross-checks 10% of evaluations for calibration. Claude produces the final human-facing report.
+**Rationale:** DeepSeek V3.2 at classification tasks is ~95% quality of Claude at ~7% the cost. For bulk evaluation of 30 test cases, this is the right model. Claude spot-checks prevent systematic DeepSeek errors from going undetected. Claude on the final report because the user reads it — never cut the user-facing synthesis step.
+
+---
+
+## D-039 — Test Suite Refresh: Monthly with Real Session Queries
+**Date:** 2026-03-25
+**Decision:** Self-improvement test suite refreshed monthly. Process: pull 30 real queries from past month's sessions (from SurfSense conversation space), remove duplicates, ensure coverage across query types, update rubric for new capability areas. Refresh cost: ~$0.10 (DeepSeek classification). Practically free.
+**Rationale:** If test suite is never refreshed, CORTEX will overfit to the fixed 30 queries over many improvement cycles — performing better on tests but not on real user queries. Monthly refresh with actual session data keeps the test suite grounded in real usage.
+
+---
+
+## D-040 — DSPy: Phase G.1 for Full Loop, Early Use Possible Now
+**Date:** 2026-03-25
+**Decision:** DSPy (Stanford, open-source) integrated at Phase G.1 for automated prompt optimization (100+ variants searched vs 3 manual/week, same cost). But DSPy can be used NOW for standalone prompt optimization: pick one high-value prompt, write 10-15 good/bad examples, run DSPy, apply best result. No Phase G infrastructure required for early use.
+**Rationale:** DSPy's full power requires a test suite + judge pipeline (Phase G). But the early standalone use case is valid and cheap — validates the approach before committing to the full infrastructure build. Good test candidate: CVS scoring prompt in venture_create, or the synthesis prompt in CortexResearchOrchestrator.
+
+---
+
+## D-041 — Auto-Git-Commit Before Any Autonomous File-Modifying Action
+**Date:** 2026-03-25
+**Decision:** Before any background process that modifies CORTEX files (experiments, prompt updates, knowledge file changes): (1) assert git is clean, (2) auto-commit with timestamp, (3) tag as `safe-YYYYMMDD-HHmm`. Runs automatically — not on user instruction. If experiment rejected: `git checkout` to tag restores files. Tags kept 90 days then cleaned.
+**Rationale:** Every production-affecting change must have a restore point. The restore point must be automatic — requiring user to remember to commit is a failure mode. This is the git-branch-before-experiment pattern from karpathy/autoresearch, applied to CORTEX's self-modification safety model.
 **Note:** Both sources use LangGraph. CORTEX uses Agent Zero extensions. Concepts and math port directly; orchestration logic must be rewritten for Agent Zero's hook system.
+
+---
+
+## D-042 — Research Cache: Venture-Type-Aware TTL + 9-Category User Display
+**Date:** 2026-03-26
+**Decision:** VentureDNA gets `research_expires_at` field set at creation based on venture_type:
+crypto/AI tools/prediction markets=2 weeks, SaaS/marketplace=6 weeks, content/media=8 weeks,
+physical/hardware/B2B=16 weeks. Cache stored in SurfSense DNA space. When cache exists, always
+show status even within TTL. Display ALL 9 value categories: (1) time-sensitive facts, (2) research
+gaps, (3) under-explored angles, (4) assumption challenges, (5) confidence weak spots, (6)
+competitive landscape shifts, (7) potential new angles, (8) macro context shifts, (9) regulatory
+status. User always gets 3 options: use cache / full refresh / targeted refresh. Incremental
+refresh on expiry: user-initiated only — agent proactively alerts but never auto-runs.
+**Rationale:** Maximum transparency + user control. Never block on expiry. Never hide cache use.
+User can override any cached result even within TTL. Always chase maximum value.
+
+---
+
+## D-043 — Post-Synthesis Gap Analysis: Standing Feature of Every Synthesis
+**Date:** 2026-03-26
+**Decision:** After every venture synthesis (not just cached cases), the synthesis model outputs a
+separate gap analysis block: (a) top angles not yet researched that could change CVS scores,
+(b) "if you researched X, confidence on [dimension] would improve from Y% to ~Z%", (c) key
+uncertainties resolving over time, (d) related markets worth exploring, (e) questions user could
+answer that would sharpen the analysis. This runs ALWAYS — it is not optional, not gated on
+user request.
+**Rationale:** Synthesis model has maximum context simultaneously (full research, user goals,
+CVS scores, conversation history). This is the best moment to identify what's missing. Finding
+this information AFTER synthesis costs nothing extra and adds permanent value.
+
+---
+
+## D-044 — venture_create: prior_research Parameter for Context Injection
+**Date:** 2026-03-26
+**Decision:** Add `prior_research: str` parameter to venture_create tool. When agent has already
+run research in the conversation, it passes the FULL synthesis JSON — not a summary. venture_create
+skips Tier 1 API calls but still runs analyze_gaps on it. Quality is identical to running Tier 1
+because it is literally the same data. Do NOT use description field for this — it gets truncated.
+**Rationale:** When agent does extensive research in conversation then calls venture_create, the
+tool currently re-runs Tier 1 independently, wasting cost and time. Context injection via dedicated
+parameter solves this with zero quality sacrifice.
+
+---
+
+## D-045 — TTS: Kokoro Local Primary, Inworld AI Fallback
+**Date:** 2026-03-26
+**Decision:** Primary TTS = Kokoro (local, CPU, free, private — no data leaves machine). Latency
+~10-15s on CPU acceptable for async Telegram use. Fallback = Inworld AI at $10/1M chars if
+real-time latency required and cloud privacy tradeoff accepted. Do NOT use Edge TTS (Microsoft
+servers). Do NOT use ElevenLabs (overkill/expensive).
+**Rationale:** Privacy concern — cloud TTS sends all spoken text to provider servers including
+venture strategy content. Local inference is the principled default for CORTEX's sensitive data.
+
+---
+
+## D-046 — STT: Deepgram + DeepSeek v3.2 Cleanup (Telegram); faster-whisper Local (Privacy Mode)
+**Date:** 2026-03-26
+**Decision:** For Telegram voice interface (Phase F): Deepgram Nova-2 ($0.0043/min) for
+transcription + DeepSeek V3.2 for cleanup (removes false starts, filler words, word-search
+attempts, formats output). For full privacy: faster-whisper running locally (no audio leaves
+machine) + DeepSeek cleanup. Deepgram wins over Groq Whisper on accuracy for conversational
+speech. Built-in Deepgram features (filler detection, smart formatting) reduce LLM cleanup load.
+Desktop STT: keep Wispr Flow ($12/month annual) until Phase F Telegram voice is built — its
+context awareness (reads active app, reformats accordingly) and command mode are not worth
+DIY-ing. Re-evaluate after Phase F.
+**Rationale:** Deepgram is purpose-built for STT, more accurate per dollar than Whisper for
+conversational speech. faster-whisper as privacy alternative since audio is sensitive.

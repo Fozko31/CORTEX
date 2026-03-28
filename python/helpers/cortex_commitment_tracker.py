@@ -54,10 +54,30 @@ class CommitmentTracker:
         self._refresh_overdue()
         return [c for c in self.commitments if c.status in ("pending", "overdue")]
 
-    def mark_done(self, commitment_id: str) -> None:
+    def mark_done(self, commitment_id: str, venture_id: str = "", venture_name: str = "",
+                  cortex_recommendation: str = "", autonomy_score: float = 0.5,
+                  agent=None) -> None:
+        """Mark commitment done and create an outcome checkin for Loop 2 attribution."""
         for c in self.commitments:
             if c.id == commitment_id:
                 c.status = "done"
+                # Trigger an outcome execution checkin (Loop 2 attribution)
+                try:
+                    from python.helpers.cortex_outcome_feedback import (
+                        create_execution_checkin,
+                        add_pending_checkin,
+                    )
+                    checkin = create_execution_checkin(
+                        commitment_id=c.id,
+                        commitment_description=c.text,
+                        venture_id=venture_id or "unknown",
+                        venture_name=venture_name or "unknown",
+                        cortex_recommendation=cortex_recommendation or c.text,
+                    )
+                    if agent is not None:
+                        add_pending_checkin(agent, checkin)
+                except Exception:
+                    pass
                 break
 
     def format_for_prompt(self) -> str:

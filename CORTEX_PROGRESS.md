@@ -1,6 +1,6 @@
 # CORTEX — Progress Tracker
 
-**Last Updated:** 2026-03-25 (Phase C core build complete — C-1 through C-9. Pending: live test.)
+**Last Updated:** 2026-03-28 (Holistic Audit COMPLETE across all phases C→G. 22 gaps fixed (4 phases audited). 715 tests passing. Key fixes: gate_0 sync mismatch, SurfSense push signature, class name mismatches in telegram_bot, memory backup file mode data-loss bug, knowledge map persistence, proactive engine wiring, ParseResult attribute errors. Phase H next.)
 
 ---
 
@@ -43,12 +43,64 @@
 | C-7 | cortex_surfsense_router.py update — venture two-space routing (DNA + ops) | COMPLETE |
 | C-8 | Cross-venture synthesis — background fn in cortex_venture_dna.py | COMPLETE |
 | C-9 | Prompt docs — venture_create.md, venture_manage.md, role.md updated | COMPLETE |
-| C-Test | Live end-to-end: create venture, confirm, check spaces + ledger | PENDING |
-| D | Authority Engine + Autonomy + Goals | NOT STARTED |
-| E | Telegram Integration (mobile-first) | NOT STARTED |
-| F | Voice Layer (STT/TTS, free/cheap first) | NOT STARTED |
-| G | Self-optimization loop | NOT STARTED |
-| H | Commercial Jarvis variant (desktop) | NOT STARTED |
+| C-Test | Research pipeline confirmed live (scan_tier1 → real data, 75% conf, 5 gaps). Agent reasoning layer confirmed (blocks duplicates, challenges bad inputs). Automated tests: 34/34 PASS. | COMPLETE |
+| D | Venture Discovery Engine (pain mining, disruption scanner, influencer monitor, opportunity queue) | COMPLETE + TESTED |
+| E | NEVER STOP: scheduler hardening, memory backup (3 layers), process watchdog | COMPLETE + TESTED |
+| Op-A | Venture Operations: credential vault, autonomy policy, task queue, action log, venture_ops + venture_playbook_create tools | COMPLETE + TESTED |
+| F | Telegram + Voice + Vision + Docs + Formatting | **COMPLETE — 93 tests (84 mocked + 13 live, user confirmed in Telegram)** |
+| G | Self-optimization loop | **COMPLETE — 90 tests passing (46 isolated + 16 holistic + 28 gap fixes). All 11 gaps fixed.** |
+| Audit-CD-EF | Holistic cross-phase audit + gap fixes | **COMPLETE — 22 gaps fixed across D/E/F/Op-A. 715 tests passing.** |
+| H | Commercial Jarvis variant (Fly.io, FastAPI, desktop) | NOT STARTED |
+
+## PRE-C DOCUMENTATION (2026-03-27)
+
+Three-file documentation standard completed for all phases before Phase C:
+
+| Phase | Summary file | Architecture file |
+|-------|-------------|------------------|
+| Phase 0 | `CORTEX_PHASE_0_SUMMARY.md` | `usr/knowledge/cortex_main/main/phase_0_architecture.md` |
+| Phase A1 | `CORTEX_PHASE_A1_SUMMARY.md` | `usr/knowledge/cortex_main/main/phase_a1_architecture.md` |
+| Phase A2 | `CORTEX_PHASE_A2_SUMMARY.md` | `usr/knowledge/cortex_main/main/phase_a2_architecture.md` |
+| Phase B | `CORTEX_PHASE_B_SUMMARY.md` | `usr/knowledge/cortex_main/main/phase_b_architecture.md` |
+| Tool-1→7 + Umbrella A→G | `CORTEX_PHASE_TOOLS_SUMMARY.md` | `usr/knowledge/cortex_main/main/phase_tools_architecture.md` |
+
+`cortex_architecture_current.md` Phase Build Map updated with links to all architecture files.
+
+---
+
+## PHASE E COMPONENTS (2026-03-27)
+
+| Component | What | Status |
+|-----------|------|--------|
+| E-1 | register_discovery_task() — rewritten, uses TaskScheduler not system crontab | ✓ |
+| E-1 | register_weekly_digest_task() — fixed async + correct dedup + correct constructor | ✓ |
+| E-1 | register_proactive_task() — same fixes | ✓ |
+| E-1 | register_backup_task() — new, Sunday 02:00 UTC | ✓ |
+| E-1 | _15_register_schedulers.py — now awaits all four registrations | ✓ |
+| E-2 | cortex_watchdog.py — process watchdog, default OFF, commercial desktop | ✓ |
+| E-2 | scripts/install_windows_service.bat — NSSM setup, optional | ✓ |
+| E-3 | cortex_memory_backup.py — 3-layer weekly backup (FAISS + Graphiti + SurfSense) | ✓ |
+| Tests | test_e1_scheduler.py — 24 tests | ✓ PASS |
+| Tests | test_e3_memory_backup.py — 17 tests | ✓ PASS |
+| Holistic | Phase D + E together — 322 tests | ✓ PASS |
+
+## PHASE OP-A COMPONENTS (2026-03-27)
+
+| Component | What | Status |
+|-----------|------|--------|
+| OPA-1 | cortex_credential_vault.py — Fernet encryption, list_keys() exposes no raw values, expiry warnings | ✓ |
+| OPA-2 | cortex_autonomy_policy.py — 3-level hierarchy (venture+class+resource), spend gate, set_by='user' always | ✓ |
+| OPA-3 | cortex_venture_task_queue.py — SQLite task queue, TaskScheduler integration | ✓ |
+| OPA-4 | cortex_venture_action_log.py — immutable audit trail, HITL pending_approval queue | ✓ |
+| OPA-5 | venture_ops.py tool — 13 operations, unified Op-A interface | ✓ |
+| OPA-6 | venture_ops prompt doc — agents/cortex/prompts/agent.system.tool.venture_ops.md | ✓ |
+| OPA-7 | venture_playbook_create.py tool — 9-step interactive flow, resume, compliance, integer versioning | ✓ |
+| OPA-8 | venture_playbook_create prompt doc — agents/cortex/prompts/agent.system.tool.venture_playbook_create.md | ✓ |
+| Tests | test_opa1_credential_vault.py — 20 tests | ✓ PASS |
+| Tests | test_opa2_autonomy_policy.py — 27 tests | ✓ PASS |
+| Tests | test_opa3_task_queue_action_log.py — 24 tests | ✓ PASS |
+| Tests | test_opa4_playbook_create.py — 21 tests | ✓ PASS |
+| Holistic | Phase D + E + Op-A together — 421 tests | ✓ PASS |
 
 ---
 
@@ -483,8 +535,32 @@ Files to create (porting from Omnis + adding Jarvis authority engine + OKR goals
 
 ---
 
-## Phase D: Meta-Intelligence
-**Status:** NOT STARTED — Foundation: `cortex_self_optimizer.py` available in omnis `venture/self_optimizer.py`
+## Phase D: Venture Discovery Engine
+**Status:** COMPLETE — 188 unit tests PASS + 84/84 holistic integration tests PASS (2026-03-26)
+
+### Components built (D-1 through D-11)
+
+- [x] **D-2** `python/helpers/cortex_pain_signals.py` — PainSignal ingestion from G2, Capterra, Reddit, App Store (Tavily + Exa)
+- [x] **D-3** `python/helpers/cortex_pain_clustering.py` — LLM clustering → PainCluster with severity, build_pain_summary
+- [x] **D-4** `python/helpers/cortex_influencer_monitor.py` — YouTube/podcast/newsletter discovery + Firecrawl transcript extraction
+- [x] **D-5** `python/helpers/cortex_disruption_scanner.py` — 7-dimension DisruptionTarget scoring, windows, approaches
+- [x] **D-5 bug fixed** — date parsing `len(fmt)` was format string length (5), not date string length (7). All windows returned "unknown". Fixed with `(fmt, length)` tuple pairs.
+- [x] **D-6** `python/helpers/cortex_opportunity_scorer.py` — CVS pre-score, VentureCandidate population
+- [x] **D-6** `python/helpers/cortex_venture_candidate.py` — VentureCandidate dataclass + VentureCandidateQueue
+- [x] **D-7** `python/helpers/cortex_discovery_params.py` — VentureDiscoveryParameters + gate_0/gate_1/gate_2
+- [x] **D-8** `python/helpers/cortex_discovery_orchestrator.py` — 8-step pipeline, DiscoveryResult, budget gating, module-level imports for testability
+- [x] **D-9** `python/tools/venture_discover.py` — Agent tool (fast/full/scan_only modes)
+- [x] **D-10** `python/extensions/system_prompt/_10_discovery_context.py` — queue summary in system prompt
+- [x] **D-10** `python/helpers/cortex_discovery_scheduler.py` — daily cron + run_discovery_loop
+- [x] **D-10** `python/helpers/cortex_discovery_params.py` — added `target_niches` field
+- [x] **D-10** `python/extensions/monologue_start/_15_register_schedulers.py` — wired discovery scheduler
+- [x] **D-11** `agents/cortex/prompts/agent.system.tool.venture_discover.md` — tool documentation
+- [x] **D-11** `agents/cortex/prompts/agent.system.main.role.md` — routing table updated
+
+### Tests
+- `tests/test_d5_disruption_scanner.py` — 70 tests
+- `tests/test_d8_discovery_orchestrator.py` — 52 tests
+- `test_d_integration.py` — 84/84 PASS (holistic, all gates + pipeline)
 
 ---
 

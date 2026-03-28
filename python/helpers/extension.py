@@ -45,7 +45,23 @@ async def call_extensions(
 
     # execute unique extensions
     for cls in classes:
-        await cls(agent=agent).execute(**kwargs)
+        try:
+            await cls(agent=agent).execute(**kwargs)
+        except Exception as exc:
+            # Log extension failure to Phase G event store (best-effort, never crash)
+            try:
+                ext_name = _get_file_from_module(cls.__module__)
+                from python.helpers import cortex_event_store as _es
+                session_id = str(getattr(getattr(agent, "id", None), "__str__", lambda: "")()) if agent else ""
+                _es.log_extension_failure(
+                    extension_name=ext_name,
+                    exception_type=type(exc).__name__,
+                    exception_msg=str(exc)[:300],
+                    session_id=session_id,
+                )
+            except Exception:
+                pass
+            raise
 
 
 def _get_file_from_module(module_name: str) -> str:

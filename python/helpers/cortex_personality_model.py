@@ -57,16 +57,33 @@ _PREF_MAP = {
     "bullet": ("format", 4.0),
 }
 
+# Arbitrary string preferences (stored separately from float dimensions).
+# Key: preference name, Value: allowed values + default.
+# Extended by Phase F: TTS routing, comprehension check mode.
+_STRING_PREF_DEFAULTS: dict[str, str] = {
+    "tts_language_pref": "match_input",    # "force_sl" | "force_en" | "match_input"
+    "comprehension_mode": "compact",        # "compact" | "detailed" | "off"
+}
+
 
 class PersonalityModel:
 
-    def __init__(self, dimensions: dict | None = None, observations: list | None = None):
+    def __init__(
+        self,
+        dimensions: dict | None = None,
+        observations: list | None = None,
+        preferences: dict | None = None,
+    ):
         self.dimensions: dict[str, float] = dict(_DEFAULTS)
         if dimensions:
             for k, v in dimensions.items():
                 if k in self.dimensions:
                     self.dimensions[k] = max(1.0, min(5.0, float(v)))
         self.observations: list[str] = list(observations or [])[-_OBSERVATIONS_MAX:]
+        # Arbitrary string preferences (TTS routing, comprehension mode, etc.)
+        self.preferences: dict[str, str] = dict(_STRING_PREF_DEFAULTS)
+        if preferences:
+            self.preferences.update(preferences)
 
     def update_from_prefs(self, prefs: dict, nudge_weight: float = 0.25) -> None:
         for _key, val in prefs.items():
@@ -77,6 +94,14 @@ class PersonalityModel:
     def _nudge(self, dimension: str, toward: float, weight: float = 0.25) -> None:
         current = self.dimensions.get(dimension, 3.0)
         self.dimensions[dimension] = round(current + (toward - current) * weight, 2)
+
+    def get_preference(self, key: str, default: str = "") -> str:
+        """Read a string preference (e.g. 'tts_language_pref')."""
+        return self.preferences.get(key, _STRING_PREF_DEFAULTS.get(key, default))
+
+    def set_preference(self, key: str, value: str) -> None:
+        """Persist a string preference."""
+        self.preferences[key] = value
 
     def add_observation(self, text: str) -> None:
         self.observations.append(text)
@@ -98,6 +123,7 @@ class PersonalityModel:
         return {
             "dimensions": self.dimensions,
             "observations": self.observations,
+            "preferences": self.preferences,
             "updated": datetime.now().isoformat(),
         }
 
@@ -106,6 +132,7 @@ class PersonalityModel:
         return cls(
             dimensions=data.get("dimensions"),
             observations=data.get("observations"),
+            preferences=data.get("preferences"),
         )
 
     @staticmethod

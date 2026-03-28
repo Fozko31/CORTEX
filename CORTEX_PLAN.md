@@ -400,27 +400,147 @@ User can say "use tier 2" at any point to force deep research. CORTEX auto-selec
 
 ---
 
-### Phase D: Meta-Intelligence
+### Phase D: Venture Discovery
 
-**Files:**
-- `python/helpers/cortex_self_knowledge.py` — capability registry
-- `python/helpers/cortex_dspy_optimizer.py` — DSPy pipeline
-- `python/helpers/cortex_self_optimizer.py` — SOUL.md evolution
-- `python/extensions/tool_execute_before/_15_log_tool_usage.py`
-- `python/extensions/tool_execute_after/_15_record_outcome.py`
-- `python/extensions/monologue_end/_65_confidence_calibration.py`
+**Status:** PLANNED — after Phase C live tests pass
+
+**What it is:** A discovery engine that proactively finds venture opportunities aligned with user-defined parameters. Same infrastructure as Phase C (CVS scoring, CortexResearchOrchestrator, SurfSense, OutcomeLedger) — extended, not duplicated.
+
+**Two modes (one engine):**
+
+**Mode 1 — Interactive Parameter Session (~10 min with user):**
+User free-flows ideas → CORTEX does lightweight research using cortex tooling → iterates back-and-forth → crystallizes a `VentureDiscoveryParameters` object → saved to disk → used by Mode 2. Without this session, Mode 2 is blind. 10 minutes of parameter design = 5-10x better autonomous discovery quality.
+
+**Mode 2 — Autonomous Discovery (background, parameter-driven):**
+Runs research cycles using parameters from Mode 1. Each candidate → DeepSeek CVS pre-score → gate (score ≥ min_cvs_score) → user review queue. Runs off-hours only (1-6am CET). Hard budget cap per night (default $3.00).
+
+**VentureDiscoveryParameters:** market_domains, geography, min_cvs_score (default 45), min_ai_run_autonomy (default 50), max_capital_requirement, languages, excluded_domains, revenue_target_monthly, autonomy_preference.
+
+**Build order (D-1 → D-7):**
+
+**D-1: Dataclasses** — `python/helpers/cortex_discovery_params.py`
+- VentureDiscoveryParameters, VentureCandidate, DiscoveryQueue dataclasses + persistence
+
+**D-2: Discovery Engine** — `python/helpers/cortex_discovery_engine.py`
+- Interactive session runner + autonomous cycle runner + candidate scoring via DeepSeek V3.2
+
+**D-3: Tool** — `python/tools/venture_discover.py`
+- Actions: discover, run [n], queue, review <id>, accept <id>, reject <id>, params, update_params
+- `accept` → calls `venture_create start` with pre-loaded research context (no research wasted)
+
+**D-4: Context Extension** — `python/extensions/monologue_start/_08_discovery_context.py`
+- If queue non-empty: inject queue length + top candidate preview into system prompt
+
+**D-5: Tool Docs** — `agents/cortex/prompts/agent.system.tool.venture_discover.md`
+
+**D-6: Role Update** — add venture_discover to Step 6 tool routing table in role.md
+
+**D-7: Scheduler** — register nightly Mode 2 in `_15_register_schedulers.py`
+
+**Storage:** `usr/memory/cortex_main/discovery/` → params.json, queue.json, rejected.json, accepted.json
+
+**Cost per night:** ~$0.03-0.07/cycle × 30 cycles = ~$1.00-2.10. Budget cap hard-coded at $3.00.
+
+**Verification tests:** D-T1 through D-T7 (params saved, queue populated, CVS gate works, accept→create flow, scheduler fires, budget enforced, dedup works)
+
+**Architecture docs (build at Phase D completion):**
+- `agents/cortex/knowledge/cortex_main/main/architecture/cortex_wiring_phase_d.md`
+- `agents/cortex/knowledge/cortex_main/main/architecture/cortex_architecture_phase_d.json`
 
 ---
 
-### Phase E: UI Polish (Deferred)
+### Phase E: Background Processes (NEVER STOP Protocol)
 
-Evaluate after Phase D. If Alpine.js is sufficient: skip. If not: Next.js frontend connecting to same backend.
+**Status:** PLANNED — after Phase D
+
+**What it is:** Activates and hardens all background autonomous processes. Connects existing but dormant components (proactive engine, weekly digest, scheduler). Adds memory backup automation and auto-git-commit safety.
+
+**NEVER STOP protocol:** Once started, background processes run without checking in. Loop until manually stopped or budget exhausted. Never interrupt active sessions.
+
+**Components:**
+- E-1: Scheduler hardening (off-hours constraint, session mutex, budget enforcement, failure logging)
+- E-2: Proactive engine activation (`cortex_proactive_engine.py` already built)
+- E-3: Weekly digest activation (`cortex_weekly_digest.py` already built)
+- E-4: Memory backup automation:
+  - L1 FAISS: daily rsync → B2/OneDrive
+  - L2 Graphiti: weekly Zep export API → JSON → B2
+  - L3 SurfSense: daily pg_dump → B2/OneDrive
+  - Single `cortex-backups/` directory, 30-day retention
+- E-5: Auto-git-commit safety before any file-modifying background job
+
+**Off-hours schedule (default):**
+- 2:00am CET daily: autonomous discovery
+- 3:00am CET daily: L1+L3 backup
+- 1:00am CET daily: proactive engine check
+- 2:00am CET Sunday: weekly digest
+- 3:30am CET Sunday: L2 Graphiti export
+
+**Monthly cost:** ~$47-65 (discovery dominates at ~$45-63). Reduce default cycles to control cost.
 
 ---
 
-### Phase F: Hardening & Deployment
+### Phase F: Venture Operations
 
-License audit, security audit, Docker compose, Fly.io deployment, E2E tests, performance baseline.
+**Status:** PLANNED — after Phase E
+
+**What it is:** Per-venture autonomy unlocking. CORTEX executes specific decision types autonomously for ventures that have proven themselves through monitored recommendations.
+
+**Autonomy is per-decision-type, not per-venture globally.** User monitors CORTEX's recommendations over time, recognizes patterns ("it always decides X correctly in situation Y"), then explicitly grants autonomy for that decision type via `venture_manage`.
+
+**Alert system:** If CORTEX deviates significantly from established decision pattern → immediate alert to user with full context.
+
+**`autonomy_level` field in VentureDNA:** tracks which decision types are autonomous vs confirmation-required per venture.
+
+---
+
+### Phase G: CORTEX Self-Improvement (Epistemic Flywheel)
+
+**Status:** PLANNED — after Phase F
+
+**What it is:** Weekly cycle: analyze struggle_detect failures → cluster → hypothesize → isolated experiments → objective judge → human approval gate → apply winning changes.
+
+**autoresearch pattern applied to CORTEX prompts and knowledge** (not ML weights).
+
+**What gets experimented on:** prompts, knowledge files, model routing assignments (in G). Python code (in H+).
+
+**Key components:**
+- G-1: Memory isolation (`usr/memory/cortex_main_test/` namespace — never touches live memory)
+- G-2: Auto-git-commit safety before experiments
+- G-3: Test suite (30-40 representative queries + rubric, designed with user)
+- G-4: Judge pipeline (DeepSeek V3.2 primary + Claude spot-check)
+- G-5: Experiment runner (isolated, budget-capped, session-mutex)
+- G-6: Struggle detect aggregation → hypothesis generator
+- G-7: Objective report generator (no advocacy, before/after comparison)
+- G-8: Human confirmation gate + apply mechanism
+- G.1: DSPy integration (automated prompt search — 100+ variants vs 3 manual/week, same cost)
+
+**Test suite refresh:** Monthly. Pull 30 real queries from past month's sessions. Anti-overfit measure.
+
+**Judge stack:** DeepSeek V3.2 (primary, cheap) + Claude Sonnet 4.6 (10% spot-check calibration)
+
+**Cost per experiment:** ~$0.50-0.90. 3 experiments/week = ~$6-11/month.
+
+**DSPy early use (before Phase G):** Possible now for standalone prompt optimization. Pick one prompt, write 10-15 examples, run DSPy, apply best result. No G infrastructure needed.
+
+---
+
+### Phase H: Full Autonomy (Remove Agent Zero Wrapper)
+
+**Status:** PLANNED — after Phase G validated
+
+Replace Agent Zero conversational shell with direct FastAPI/Telegram interface. Keep LangGraph + memory stack unchanged. FAISS → Supabase pgvector for Fly.io deployment.
+
+---
+
+### Phase I: Commercial / Jarvis Variant
+
+Desktop-first advisory mode. Less autonomy, more structured interaction. Commercial product for broader market.
+
+---
+
+### Phase J: UI Polish (if needed)
+
+Evaluate after Phase E. If Alpine.js is sufficient: skip. If not: Next.js frontend connecting to same backend.
 
 ---
 

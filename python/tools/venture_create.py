@@ -266,8 +266,11 @@ class VentureCreate(Tool):
             return await self._run_synthesis(session)
 
     async def _handle_synthesis(self, session: dict, user_input: str) -> Response:
+        # If synthesis hasn't run yet (no-gaps path sets phase before running), run it now
+        if not session.get("dna_dict"):
+            return await self._run_synthesis(session)
         # User is responding to synthesis review — move to iteration or crystallization
-        if any(w in user_input.lower() for w in ("good", "ok", "proceed", "next", "yes", "looks good", "crystallize")):
+        if any(w in user_input.lower() for w in ("good", "ok", "proceed", "next", "yes", "looks good", "crystallize", "continue", "confirm")):
             return await self._run_crystallization(session)
         else:
             session["phase"] = "ITERATION"
@@ -301,7 +304,9 @@ class VentureCreate(Tool):
         )
 
         from python.helpers.cortex_model_router import CortexModelRouter
-        response = await CortexModelRouter.call_async("synthesis", refinement_prompt)
+        response = await CortexModelRouter.call_routed_model(
+            "summarization", "You are a venture synthesis assistant.", refinement_prompt, self.agent
+        )
 
         if "ready to crystallize" in response.lower():
             session["phase"] = "CRYSTALLIZATION"
@@ -557,10 +562,10 @@ class VentureCreate(Tool):
         # L1 FAISS recall
         try:
             from python.helpers import memory as memory_module
-            mem = memory_module.Memory.get(self.agent)
-            results = await mem.search_memory(
+            mem = await memory_module.Memory.get(self.agent)
+            results = await mem.search_similarity_threshold(
                 query=venture_name,
-                count=5,
+                limit=5,
                 threshold=0.4,
                 filter="all",
             )
@@ -597,9 +602,11 @@ class VentureCreate(Tool):
             "constraints: [...], initial_insights: [...]}"
         )
         try:
-            raw = await CortexModelRouter.call_async("classification", prompt)
-            import dirtyJson
-            return dirtyJson.loads(raw) if isinstance(raw, str) else raw
+            raw = await CortexModelRouter.call_routed_model(
+                "classification", "You are a venture analysis assistant.", prompt, self.agent
+            )
+            from python.helpers.dirty_json import DirtyJson
+            return DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
         except Exception:
             return {"venture_type": "generic", "market": "global", "language": "en",
                     "goals": [], "constraints": [], "initial_insights": []}
@@ -616,7 +623,10 @@ class VentureCreate(Tool):
                 context=session.get("description", ""),
             )
             return report
-        except Exception:
+        except Exception as e:
+            import traceback
+            print(f"[CORTEX _run_tier1 ERROR] {type(e).__name__}: {e}")
+            traceback.print_exc()
             return None
 
     async def _build_dna_from_session(self, session: dict):
@@ -689,9 +699,11 @@ class VentureCreate(Tool):
         )
 
         try:
-            raw = await CortexModelRouter.call_async("classification", prompt)
-            import dirtyJson
-            scores = dirtyJson.loads(raw) if isinstance(raw, str) else raw
+            raw = await CortexModelRouter.call_routed_model(
+                "classification", "You are a venture scoring assistant.", prompt, self.agent
+            )
+            from python.helpers.dirty_json import DirtyJson
+            scores = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
             if isinstance(scores, dict):
                 dna.update_cvs(
                     market_size=float(scores.get("market_size", 50)),
@@ -730,9 +742,11 @@ class VentureCreate(Tool):
         )
 
         try:
-            raw = await CortexModelRouter.call_async("classification", prompt)
-            import dirtyJson
-            scores = dirtyJson.loads(raw) if isinstance(raw, str) else raw
+            raw = await CortexModelRouter.call_routed_model(
+                "classification", "You are a venture capability analyst.", prompt, self.agent
+            )
+            from python.helpers.dirty_json import DirtyJson
+            scores = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
             if isinstance(scores, dict):
                 dna.update_cvs(
                     ai_setup_autonomy=float(scores.get("ai_setup_autonomy", 50)),
@@ -801,9 +815,8 @@ class VentureCreate(Tool):
                 f"Key insights: {'; '.join(dna.key_insights[:3])}."
             )
             await client.add_episode(
-                name=f"Venture created: {dna.name}",
-                body=episode_body,
-                source_description="venture_create tool",
+                text=episode_body,
+                source="venture_create",
             )
             await client.close()
         except Exception:
@@ -846,11 +859,11 @@ class VentureCreate(Tool):
         else:
             session["phase"] = "SYNTHESIS"
             self._save_session(session)
-            import asyncio
             return Response(
                 message=(
                     f"{research_block}\n\n"
-                    f"Research looks solid — moving to synthesis. Stand by..."
+                    f"Research looks solid — no gaps identified. Moving to synthesis.\n"
+                    f"Reply `continue` to run synthesis."
                 ),
                 break_loop=False,
             )

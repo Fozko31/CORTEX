@@ -104,6 +104,7 @@ class CortexSelfModel:
             km["ventures_tracked"] = ventures
         if topics is not None:
             km["last_session_topics"] = topics
+        self.data["knowledge_map"] = km
 
     def add_knowledge_gap(self, topic: str, severity: str = "medium"):
         gaps = self.data.get("knowledge_gaps", [])

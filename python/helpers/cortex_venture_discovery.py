@@ -151,7 +151,7 @@ class CortexVentureScanner:
         Always tries Tier 1 first — fast and cheap (~$0.01-0.03).
         """
         from python.helpers.cortex_research_orchestrator import CortexResearchOrchestrator
-        orchestrator = CortexResearchOrchestrator(self.agent)
+        orchestrator = CortexResearchOrchestrator.from_agent(self.agent)
 
         queries = _build_research_queries(niche, market, language, tier=1)
         context_block = f"Venture context: {context}\n\n" if context else ""
@@ -172,14 +172,17 @@ class CortexVentureScanner:
 
         try:
             result = await orchestrator.research(
-                query=prompt,
+                topic=prompt,
                 queries=queries,
-                tier=1,
+                tier="Tier1",
                 max_results_per_query=6,
             )
-            return await _parse_research_result(result, niche, market, language, tier=1)
+            return await _parse_research_result(result, niche, market, language, tier=1, agent=self.agent)
         except Exception as e:
-            return _offline_stub(niche, market, language, error=str(e))
+            import traceback
+            print(f"[CORTEX scan_tier1 ERROR] {type(e).__name__}: {e}")
+            traceback.print_exc()
+            return _offline_stub(niche, market, language, error=f"{type(e).__name__}: {e}")
 
     async def scan_tier2(
         self,
@@ -195,7 +198,7 @@ class CortexVentureScanner:
         Returns Tier 2 report; caller should merge with Tier 1 findings.
         """
         from python.helpers.cortex_research_orchestrator import CortexResearchOrchestrator
-        orchestrator = CortexResearchOrchestrator(self.agent)
+        orchestrator = CortexResearchOrchestrator.from_agent(self.agent)
 
         tier1_context = ""
         gap_questions = []
@@ -225,12 +228,19 @@ class CortexVentureScanner:
         )
 
         try:
+            tier2_queries = [
+                f"{niche} market deep dive {market}",
+                f"{niche} competitive moat defensibility",
+                f"{niche} failure modes risks {market}",
+                f"{niche} market size growth {market} 2024 2025",
+            ]
             result = await orchestrator.research(
-                query=prompt,
-                tier=2,
+                topic=prompt,
+                queries=tier2_queries,
+                tier="Tier2",
                 max_results_per_query=8,
             )
-            report = await _parse_research_result(result, niche, market, language, tier=2)
+            report = await _parse_research_result(result, niche, market, language, tier=2, agent=self.agent)
             # Merge Tier 1 keywords if we have them (don't lose existing data)
             if tier1_report and tier1_report.keywords:
                 existing_kws = {k.keyword for k in report.keywords}
@@ -239,9 +249,12 @@ class CortexVentureScanner:
                         report.keywords.append(kw)
             return report
         except Exception as e:
+            import traceback
+            print(f"[CORTEX scan_tier2 ERROR] {type(e).__name__}: {e}")
+            traceback.print_exc()
             if tier1_report:
                 return tier1_report  # fallback to Tier 1
-            return _offline_stub(niche, market, language, error=str(e))
+            return _offline_stub(niche, market, language, error=f"{type(e).__name__}: {e}")
 
     async def analyze_gaps(self, report: TrendReport) -> List[ResearchGap]:
         """
@@ -261,9 +274,11 @@ class CortexVentureScanner:
         )
 
         try:
-            raw = await CortexModelRouter.call_async("classification", prompt)
-            import dirtyJson
-            gaps_data = dirtyJson.loads(raw) if isinstance(raw, str) else raw
+            raw = await CortexModelRouter.call_routed_model(
+                "classification", "You are a research gap analyst.", prompt, self.agent
+            )
+            from python.helpers.dirty_json import DirtyJson
+            gaps_data = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
             if not isinstance(gaps_data, list):
                 gaps_data = gaps_data.get("gaps", []) if isinstance(gaps_data, dict) else []
             gaps = []
@@ -381,6 +396,7 @@ async def _parse_research_result(
     market: str,
     language: str,
     tier: int = 1,
+    agent=None,
 ) -> TrendReport:
     """Parse orchestrator result into a TrendReport."""
     from python.helpers.cortex_model_router import CortexModelRouter
@@ -406,9 +422,11 @@ async def _parse_research_result(
     )
 
     try:
-        raw = await CortexModelRouter.call_async("classification", extraction_prompt)
-        import dirtyJson
-        data = dirtyJson.loads(raw) if isinstance(raw, str) else raw
+        raw = await CortexModelRouter.call_routed_model(
+            "classification", "You are a market research extraction assistant.", extraction_prompt, agent
+        )
+        from python.helpers.dirty_json import DirtyJson
+        data = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
         if not isinstance(data, dict):
             raise ValueError("not a dict")
     except Exception:

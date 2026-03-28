@@ -179,15 +179,14 @@ async def _refresh_space_summaries(agent, client, routing_index):
         pass
 
 
-def register_weekly_digest_task():
+async def register_weekly_digest_task():
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule, TaskState
+        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
 
         scheduler = TaskScheduler.get()
-        task_id = "cortex_weekly_digest"
+        task_name = "CORTEX Weekly Digest"
 
-        existing = scheduler._tasks.get_task(task_id)
-        if existing:
+        if scheduler.get_task_by_name(task_name):
             return
 
         schedule = TaskSchedule(
@@ -195,20 +194,21 @@ def register_weekly_digest_task():
             hour="3",
             day="*",
             month="*",
-            weekday="1",
+            weekday="0",  # Sunday 02:00 UTC (plan: Sunday 2am CET ≈ Sunday 2am UTC off-season)
             timezone="UTC",
         )
 
-        task = ScheduledTask(
-            id=task_id,
-            name="CORTEX Weekly Digest",
-            schedule=schedule,
+        task = ScheduledTask.create(
+            name=task_name,
             system_prompt=DIGEST_SYSTEM_PROMPT,
-            prompt="Run the weekly digest consolidation now. Summarize recent conversations, refresh indices, and analyze cross-venture patterns.",
-            state=TaskState.IDLE,
-            agent_name="cortex",
+            prompt=(
+                "Run the weekly digest consolidation now: "
+                "import and await python.helpers.cortex_weekly_digest.run_weekly_digest(agent). "
+                "Report cross-venture patterns and refresh SurfSense summaries."
+            ),
+            schedule=schedule,
         )
 
-        scheduler._tasks.add_task(task)
+        await scheduler.add_task(task)
     except Exception:
         pass

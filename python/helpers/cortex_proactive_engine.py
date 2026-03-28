@@ -261,15 +261,14 @@ def _store_findings_for_ui(agent, findings: list):
         pass
 
 
-def register_proactive_task():
+async def register_proactive_task():
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule, TaskState
+        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
 
         scheduler = TaskScheduler.get()
-        task_id = "cortex_proactive_pulse"
+        task_name = "CORTEX Proactive Pulse"
 
-        existing = scheduler._tasks.get_task(task_id)
-        if existing:
+        if scheduler.get_task_by_name(task_name):
             return
 
         schedule = TaskSchedule(
@@ -281,24 +280,21 @@ def register_proactive_task():
             timezone="UTC",
         )
 
-        task = ScheduledTask(
-            id=task_id,
-            name="CORTEX Proactive Pulse",
-            schedule=schedule,
+        task = ScheduledTask.create(
+            name=task_name,
             system_prompt=(
                 "You are CORTEX running a proactive background pulse. "
                 "Check for new relevant content across active venture spaces. "
                 "Surface actionable insights without being asked."
             ),
             prompt=(
-                "Run the proactive pulse now: scan active venture spaces in SurfSense "
-                "for new content, classify relevance, synthesize insights if relevant, "
-                "and store findings for the awareness feed."
+                "Run the proactive pulse now: "
+                "import and await python.helpers.cortex_proactive_engine.run_proactive_pulse(agent). "
+                "Surface any high-relevance findings to the user."
             ),
-            state=TaskState.IDLE,
-            agent_name="cortex",
+            schedule=schedule,
         )
 
-        scheduler._tasks.add_task(task)
+        await scheduler.add_task(task)
     except Exception:
         pass
