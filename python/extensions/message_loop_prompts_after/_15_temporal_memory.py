@@ -2,6 +2,7 @@ from python.cortex.extension import Extension
 from python.cortex.memory import Memory
 from python.helpers import errors
 from python.cortex.loop_data import LoopData
+from python.cortex.logger import CortexLogger
 
 
 _SIMILARITY_THRESHOLD = 0.55
@@ -58,8 +59,4 @@ class CortexTemporalMemory(Extension):
 
         except Exception as e:
             err = errors.format_error(e)
-            agent.context.log.log(
-                type="warning",
-                heading="CORTEX temporal memory error",
-                content=err,
-            )
+            CortexLogger.for_agent(agent).warning("CORTEX temporal memory error", error=err)

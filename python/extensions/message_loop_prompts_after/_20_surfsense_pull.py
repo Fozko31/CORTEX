@@ -1,5 +1,7 @@
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
+from python.cortex.logger import CortexLogger
 
 
 class CortexSurfSensePull(Extension):
@@ -20,7 +22,7 @@ class CortexSurfSensePull(Extension):
             if not query or not query.strip():
                 return
 
-            routing_index = agent.get_data("cortex_space_index") or {}
+            routing_index = CortexState.for_agent(agent).get("cortex_space_index") or {}
 
             from python.helpers.cortex_surfsense_router import CortexSurfSenseRouter
             target_spaces = await CortexSurfSenseRouter.route_for_search_smart(query, agent, routing_index)
@@ -91,11 +93,7 @@ class CortexSurfSensePull(Extension):
 
         except Exception as e:
             from python.helpers import errors
-            agent.context.log.log(
-                type="warning",
-                heading="CORTEX SurfSense pull failed",
-                content=errors.format_error(e),
-            )
+            CortexLogger.for_agent(agent).warning("CORTEX SurfSense pull failed", error=errors.format_error(e))
 
 
 def _build_tier1_context(routing_index: dict, spaces: list) -> str:

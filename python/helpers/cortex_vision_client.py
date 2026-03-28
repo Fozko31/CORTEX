@@ -34,6 +34,7 @@ import os
 from typing import Optional
 
 import httpx
+from python.cortex.config import CortexConfig
 
 
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -108,8 +109,8 @@ class CortexVisionClient:
     def from_agent_config(cls, agent) -> "CortexVisionClient":
         key = ""
         try:
-            if agent and hasattr(agent, "config") and hasattr(agent.config, "get_api_key"):
-                key = agent.config.get_api_key("API_KEY_OPENROUTER") or ""
+            if agent and hasattr(agent, "config"):
+                key = CortexConfig.from_agent_config(agent.config).get_api_key("API_KEY_OPENROUTER") or ""
         except Exception:
             pass
         if not key:

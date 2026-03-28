@@ -11,17 +11,19 @@ without reading the full DNA on every turn (only loads what it needs).
 
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
+from python.cortex.config import CortexConfig
 
 
 class CortexVentureContextLoad(Extension):
     async def execute(self, loop_data: LoopData = None, **kwargs) -> None:
         agent = self.agent
-        profile = getattr(agent.config, "profile", "") or ""
+        profile = CortexConfig.from_agent_config(agent.config).profile
         if not profile.startswith("cortex") and not profile.startswith("venture_"):
             return
 
-        active_venture_name = agent.get_data("active_venture_name") or ""
-        active_venture_id = agent.get_data("active_venture") or ""
+        active_venture_name = CortexState.for_agent(agent).get("active_venture_name") or ""
+        active_venture_id = CortexState.for_agent(agent).get("active_venture") or ""
 
         if not active_venture_name and not active_venture_id:
             # No active venture — clear any stale context

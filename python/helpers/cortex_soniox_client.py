@@ -18,6 +18,7 @@ import time
 from typing import Optional
 
 import httpx
+from python.cortex.config import CortexConfig
 
 
 _SONIOX_BASE = "https://api.soniox.com/v1"
@@ -63,8 +64,8 @@ class CortexSonioxClient:
         """
         key = ""
         try:
-            if agent and hasattr(agent, "config") and hasattr(agent.config, "get_api_key"):
-                key = agent.config.get_api_key("SONIOX_API_KEY") or ""
+            if agent and hasattr(agent, "config"):
+                key = CortexConfig.from_agent_config(agent.config).get_api_key("SONIOX_API_KEY") or ""
         except Exception:
             pass
         if not key:

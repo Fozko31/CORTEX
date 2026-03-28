@@ -1,7 +1,7 @@
 """
 _22_proactive_awareness.py — Inject unread proactive findings into prompt context.
 
-Reads from agent.get_data("cortex_awareness_feed") (populated by run_proactive_pulse)
+Reads from CortexState.for_agent(agent).get("cortex_awareness_feed") (populated by run_proactive_pulse)
 and injects up to 3 unread findings into the current message loop prompt so CORTEX
 can surface them naturally in its next response.
 
@@ -10,6 +10,7 @@ Marks findings as read after injection to avoid repeat surfacing.
 
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
 
 
 class CortexProactiveAwareness(Extension):
@@ -20,7 +21,7 @@ class CortexProactiveAwareness(Extension):
             return
 
         try:
-            feed = agent.get_data("cortex_awareness_feed") or []
+            feed = CortexState.for_agent(agent).get("cortex_awareness_feed") or []
             unread = [f for f in feed if not f.get("read", False)]
             if not unread:
                 return
@@ -40,7 +41,7 @@ class CortexProactiveAwareness(Extension):
             for f in feed:
                 if f.get("title", "") in injected_titles:
                     f["read"] = True
-            agent.set_data("cortex_awareness_feed", feed)
+            CortexState.for_agent(agent).set("cortex_awareness_feed", feed)
 
             # Inject into loop data extras (persistent so it survives the full loop)
             awareness_text = "\n".join(lines)

@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Optional
 
 from python.helpers.cortex_outcome_attributor import OutcomeRecord, classify
+from python.cortex.state import CortexState
 
 
 _PENDING_CHECKINS_KEY = "cortex_pending_outcome_checkins"
@@ -129,14 +130,14 @@ def ingest_outcome(
 
 def get_pending_checkins(agent) -> list:
     """Get pending outcome checkins from agent data."""
-    return agent.get_data(_PENDING_CHECKINS_KEY) or []
+    return CortexState.for_agent(agent).get(_PENDING_CHECKINS_KEY) or []
 
 
 def add_pending_checkin(agent, checkin: dict):
     """Add a checkin to the pending queue."""
     pending = get_pending_checkins(agent)
     pending.append(checkin)
-    agent.set_data(_PENDING_CHECKINS_KEY, pending)
+    CortexState.for_agent(agent).set(_PENDING_CHECKINS_KEY, pending)
 
 
 def resolve_checkin(agent, checkin_id: str, response: str) -> Optional[dict]:
@@ -151,7 +152,7 @@ def resolve_checkin(agent, checkin_id: str, response: str) -> Optional[dict]:
         else:
             remaining.append(c)
 
-    agent.set_data(_PENDING_CHECKINS_KEY, remaining)
+    CortexState.for_agent(agent).set(_PENDING_CHECKINS_KEY, remaining)
     return resolved
 
 

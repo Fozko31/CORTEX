@@ -24,6 +24,7 @@ Output format:
 import io
 import os
 from typing import Optional
+from python.cortex.config import CortexConfig
 
 
 # Supported voices
@@ -86,9 +87,7 @@ class CortexAzureTTS:
         region = _DEFAULT_REGION
         try:
             if agent and hasattr(agent, "config"):
-                cfg = agent.config
-                if hasattr(cfg, "get_api_key"):
-                    key = cfg.get_api_key("AZURE_SPEECH_KEY") or ""
+                key = CortexConfig.from_agent_config(agent.config).get_api_key("AZURE_SPEECH_KEY") or ""
                 region = os.getenv("AZURE_SPEECH_REGION", _DEFAULT_REGION)
         except Exception:
             pass

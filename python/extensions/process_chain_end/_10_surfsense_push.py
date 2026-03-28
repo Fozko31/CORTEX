@@ -2,6 +2,7 @@ import asyncio
 from python.cortex.extension import Extension
 from python.helpers.defer import DeferredTask, THREAD_BACKGROUND
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
 
 
 class CortexSurfSensePush(Extension):
@@ -20,7 +21,7 @@ class CortexSurfSensePush(Extension):
             exchange_count = len([m for m in agent.history if getattr(m, "role", "") == "user"])
 
         push_interval = getattr(agent.config, "cortex_push_interval_exchanges", 20) or 20
-        last_push_at = agent.get_data("cortex_last_push_exchange") or 0
+        last_push_at = CortexState.for_agent(agent).get("cortex_last_push_exchange") or 0
 
         # Push on interval only — not after every single message.
         # SurfSense is the long-term archival layer, not real-time.
@@ -33,7 +34,7 @@ class CortexSurfSensePush(Extension):
         if exchange_count < 2:
             return
 
-        log_item = agent.context.log.log(
+        log_item = agent.context.log.log(  # H2: replace with CortexLogger when AZ UI removed
             type="util",
             heading="CORTEX SurfSense push",
             content="Summarizing session and pushing to consciousness layer...",
@@ -139,7 +140,7 @@ async def _push_to_surfsense(agent, exchange_count, log_item):
                     except Exception:
                         CortexSurfSenseClient.enqueue(agent, space, doc)
 
-            agent.set_data("cortex_last_push_exchange", exchange_count)
+            CortexState.for_agent(agent).set("cortex_last_push_exchange", exchange_count)
 
             try:
                 from python.helpers.cortex_self_model import CortexSelfModel

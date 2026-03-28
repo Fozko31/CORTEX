@@ -7,6 +7,7 @@ then flushes them to cortex_event_store. Falls through silently on any error.
 
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
 
 
 class CortexToolUsageLog(Extension):
@@ -21,7 +22,7 @@ class CortexToolUsageLog(Extension):
             session_id = str(getattr(agent, "id", ""))
 
             # Read tool calls accumulated during this turn via agent data
-            tool_calls = agent.get_data("cortex_tool_calls_this_turn") or []
+            tool_calls = CortexState.for_agent(agent).get("cortex_tool_calls_this_turn") or []
 
             for call in tool_calls:
                 es.log_tool_call(
@@ -33,7 +34,7 @@ class CortexToolUsageLog(Extension):
 
             # Clear accumulator
             if tool_calls:
-                agent.set_data("cortex_tool_calls_this_turn", [])
+                CortexState.for_agent(agent).set("cortex_tool_calls_this_turn", [])
 
             # Also try to extract from recent history (best-effort)
             _log_from_history(agent, session_id, es)

@@ -1,5 +1,7 @@
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
+from python.cortex.config import CortexConfig
 
 
 class CortexTrustRefresh(Extension):
@@ -9,7 +11,7 @@ class CortexTrustRefresh(Extension):
         if not agent or not agent.config:
             return
 
-        profile = getattr(agent.config, "profile", "") or ""
+        profile = CortexConfig.from_agent_config(agent.config).profile
         if not profile.startswith("cortex") and not profile.startswith("venture_"):
             return
 
@@ -17,7 +19,7 @@ class CortexTrustRefresh(Extension):
             from python.helpers.cortex_trust_engine import TrustEngine
 
             engine = TrustEngine.load(agent)
-            agent.set_data("cortex_trust_levels", engine.format_for_prompt())
+            CortexState.for_agent(agent).set("cortex_trust_levels", engine.format_for_prompt())
 
         except Exception:
             pass

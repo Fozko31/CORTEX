@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from typing import Optional
 from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.state import CortexState
 
 
 class CortexProactiveEngine:
@@ -242,7 +243,7 @@ async def _tier2_synthesize(docs: list, space_name: str, agent) -> str:
 
 def _store_findings_for_ui(agent, findings: list):
     try:
-        existing = agent.get_data("cortex_awareness_feed") or []
+        existing = CortexState.for_agent(agent).get("cortex_awareness_feed") or []
         timestamp = datetime.now().isoformat()
         new_entries = [
             {
@@ -256,7 +257,7 @@ def _store_findings_for_ui(agent, findings: list):
             for f in findings
         ]
         combined = new_entries + existing
-        agent.set_data("cortex_awareness_feed", combined[:50])
+        CortexState.for_agent(agent).set("cortex_awareness_feed", combined[:50])
     except Exception:
         pass
 

@@ -1,6 +1,8 @@
 from python.cortex.extension import Extension
 from python.helpers import errors
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
+from python.cortex.logger import CortexLogger
 
 
 # Keywords used to classify task type for adaptive challenge_level.
@@ -62,7 +64,7 @@ class CortexPersonalityInjection(Extension):
 
             model = PersonalityModel.load(agent)
             personality_txt = model.format_for_prompt()
-            agent.set_data("cortex_personality_model", personality_txt)
+            CortexState.for_agent(agent).set("cortex_personality_model", personality_txt)
             loop_data.extras_persistent["cortex_personality"] = (
                 f"## User Personality Model\n{personality_txt}"
             )
@@ -85,15 +87,11 @@ class CortexPersonalityInjection(Extension):
             active = tracker.get_active()
             if active:
                 commitments_txt = tracker.format_for_prompt()
-                agent.set_data("cortex_active_commitments", commitments_txt)
+                CortexState.for_agent(agent).set("cortex_active_commitments", commitments_txt)
                 loop_data.extras_persistent["cortex_commitments"] = (
                     f"## Active Commitments\n{commitments_txt}"
                 )
 
         except Exception as e:
             err = errors.format_error(e)
-            agent.context.log.log(
-                type="warning",
-                heading="CORTEX personality injection error",
-                content=err,
-            )
+            CortexLogger.for_agent(agent).warning("CORTEX personality injection error", error=err)

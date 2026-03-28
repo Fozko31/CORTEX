@@ -9,6 +9,7 @@ Falls through silently on any error.
 import re
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.config import CortexConfig
 
 
 # Correction signal patterns → correction type label
@@ -27,7 +28,7 @@ _CORRECTION_PATTERNS = [
 class CortexCorrectionDetect(Extension):
     async def execute(self, loop_data: LoopData = LoopData(), **kwargs) -> None:
         agent = self.agent
-        profile = getattr(agent.config, "profile", "") or ""
+        profile = CortexConfig.from_agent_config(agent.config).profile
         if not profile.startswith("cortex") and not profile.startswith("venture_"):
             return
 

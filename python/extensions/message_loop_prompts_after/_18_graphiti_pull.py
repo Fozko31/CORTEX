@@ -11,6 +11,8 @@ Result is injected into extras_persistent["cortex_graph_memory"].
 """
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
+from python.cortex.logger import CortexLogger
 
 
 _MIN_MESSAGE_LENGTH = 15
@@ -77,20 +79,16 @@ class CortexGraphitiPull(Extension):
                 f"## CORTEX Graph Memory (L2 — Zep)\n{context}"
             )
             # Clear any previous down-alert now that Zep is responding
-            agent.set_data("cortex_l2_down_alerted", False)
+            CortexState.for_agent(agent).set("cortex_l2_down_alerted", False)
 
             await client.close()
 
         except Exception as e:
             from python.helpers import errors
-            agent.context.log.log(
-                type="warning",
-                heading="CORTEX Graphiti pull failed",
-                content=errors.format_error(e),
-            )
+            CortexLogger.for_agent(agent).warning("CORTEX Graphiti pull failed", error=errors.format_error(e))
             # Inject a one-time service alert so CORTEX can inform the user
-            if not agent.get_data("cortex_l2_down_alerted"):
-                agent.set_data("cortex_l2_down_alerted", True)
+            if not CortexState.for_agent(agent).get("cortex_l2_down_alerted"):
+                CortexState.for_agent(agent).set("cortex_l2_down_alerted", True)
                 loop_data.extras_persistent["cortex_service_status"] = (
                     "⚠️ SERVICE ALERT: Zep Cloud (L2 graph memory) is currently unreachable. "
                     "You are operating on L1 FAISS only this session. "

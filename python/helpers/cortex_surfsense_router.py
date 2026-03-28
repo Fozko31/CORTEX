@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from typing import Optional
 from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.state import CortexState
 
 CORE_SPACES = [
     "cortex_user_profile",
@@ -106,7 +107,7 @@ class CortexSurfSenseRouter:
     def get_venture_spaces_for_active(agent) -> list:
         """Return DNA + ops space names for the currently active venture (if any)."""
         try:
-            active_name = agent.get_data("active_venture_name") or ""
+            active_name = CortexState.for_agent(agent).get("active_venture_name") or ""
             if not active_name:
                 return []
             return [

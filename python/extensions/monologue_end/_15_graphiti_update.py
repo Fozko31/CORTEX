@@ -14,7 +14,7 @@ class CortexGraphitiUpdate(Extension):
         if not graphiti_url:
             return
 
-        log_item = agent.context.log.log(
+        log_item = agent.context.log.log(  # H2: replace with CortexLogger when AZ UI removed
             type="util",
             heading="CORTEX Graphiti update",
             content="Forwarding extracted knowledge to temporal graph...",

@@ -3,6 +3,8 @@ from python.cortex.memory import Memory
 from python.helpers import errors
 from python.helpers.defer import DeferredTask, THREAD_BACKGROUND
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
+from python.cortex.logger import CortexLogger
 
 
 class CortexKnowledgeExtraction(Extension):
@@ -16,7 +18,7 @@ class CortexKnowledgeExtraction(Extension):
         if not profile.startswith("cortex") and not profile.startswith("venture_"):
             return
 
-        log_item = agent.context.log.log(
+        log_item = agent.context.log.log(  # H2: replace with CortexLogger when AZ UI removed
             type="util",
             heading="Extracting CORTEX knowledge...",
         )
@@ -69,13 +71,13 @@ class CortexKnowledgeExtraction(Extension):
                         commitment_type=c.commitment_type,
                     )
                 tracker.save(agent)
-                agent.set_data("cortex_active_commitments", tracker.format_for_prompt())
+                CortexState.for_agent(agent).set("cortex_active_commitments", tracker.format_for_prompt())
 
             if result.user_prefs:
                 model = PersonalityModel.load(agent)
                 model.update_from_prefs(result.user_prefs)
                 model.save(agent)
-                agent.set_data("cortex_personality_model", model.format_for_prompt())
+                CortexState.for_agent(agent).set("cortex_personality_model", model.format_for_prompt())
 
             log_item.update(
                 heading=(
@@ -86,8 +88,4 @@ class CortexKnowledgeExtraction(Extension):
 
         except Exception as e:
             err = errors.format_error(e)
-            self.agent.context.log.log(
-                type="warning",
-                heading="CORTEX knowledge extraction error",
-                content=err,
-            )
+            CortexLogger.for_agent(self.agent).warning("CORTEX knowledge extraction error", error=err)

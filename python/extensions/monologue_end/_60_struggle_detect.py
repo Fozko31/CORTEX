@@ -1,6 +1,7 @@
 import re
 from python.cortex.extension import Extension
 from python.cortex.loop_data import LoopData
+from python.cortex.state import CortexState
 
 
 HEDGING_PATTERNS = [
@@ -64,7 +65,7 @@ class CortexStruggleDetect(Extension):
 
             self_model.save(agent)
 
-            agent.set_data("cortex_last_struggle", {
+            CortexState.for_agent(agent).set("cortex_last_struggle", {
                 "topic": topic,
                 "signals": struggle_signals,
                 "severity": severity,
@@ -112,7 +113,7 @@ async def _offer_help(agent, topic: str, signals: list, loop_data: LoopData):
         )
 
         if suggestion and suggestion.strip():
-            agent.set_data("cortex_proactive_help", {
+            CortexState.for_agent(agent).set("cortex_proactive_help", {
                 "topic": topic,
                 "suggestion": suggestion.strip(),
                 "timestamp": __import__("datetime").datetime.now().isoformat(),
