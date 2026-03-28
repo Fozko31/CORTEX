@@ -122,7 +122,7 @@ def _build_session_summary(session, operational_report: dict) -> str:
 
 
 async def register_loop3_task():
-    """Register bi-monthly Loop 3 trigger using Agent Zero TaskScheduler."""
+    """Register bi-monthly Loop 3 trigger via APScheduler."""
     try:
         from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
         scheduler = TaskScheduler.get()
@@ -135,8 +135,7 @@ async def register_loop3_task():
         )
         task = ScheduledTask.create(
             name=task_name,
-            system_prompt="You are CORTEX running a scheduled bi-monthly architectural review (Loop 3).",
-            prompt="Trigger Loop 3 architectural review: use the self_improve tool with operation='run_loop3'.",
+            callable_fn=_scheduled_loop3,
             schedule=schedule,
         )
         await scheduler.add_task(task)

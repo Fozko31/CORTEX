@@ -428,16 +428,7 @@ async def register_backup_task() -> None:
 
         task = ScheduledTask.create(
             name=task_name,
-            system_prompt=(
-                "You are CORTEX running the weekly memory backup. "
-                "Back up all three memory layers: FAISS local files, "
-                "Graphiti/Zep Cloud graph export, and SurfSense source content."
-            ),
-            prompt=(
-                "Run the full memory backup now: "
-                "import and await python.helpers.cortex_memory_backup.run_full_backup(agent). "
-                "Report the results for each layer."
-            ),
+            callable_fn=_scheduled_memory_backup,
             schedule=schedule,
         )
 
@@ -445,6 +436,14 @@ async def register_backup_task() -> None:
         print("[CORTEX backup] Registered weekly backup task (Sunday 02:00 UTC)")
     except Exception as e:
         print(f"[CORTEX backup] Could not register backup task: {e}")
+
+
+async def _scheduled_memory_backup() -> None:
+    """Weekly memory backup — called directly by APScheduler."""
+    try:
+        await run_full_backup(agent=None)
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------

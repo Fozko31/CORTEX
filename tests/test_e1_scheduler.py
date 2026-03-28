@@ -56,7 +56,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         scheduler = _make_mock_scheduler()
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("CORTEX_DISCOVERY_AUTO", None)
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 _run(register_discovery_task())
         scheduler.add_task.assert_not_called()
 
@@ -65,7 +65,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         register_discovery_task = self._import()
         scheduler = _make_mock_scheduler(existing_task=None)
         with patch.dict(os.environ, {"CORTEX_DISCOVERY_AUTO": "1"}):
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 _run(register_discovery_task())
         scheduler.add_task.assert_called_once()
 
@@ -74,7 +74,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         register_discovery_task = self._import()
         scheduler = _make_mock_scheduler(existing_task=None)
         with patch.dict(os.environ, {"CORTEX_DISCOVERY_AUTO": "1"}):
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 _run(register_discovery_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.name, "CORTEX Discovery Loop")
@@ -84,7 +84,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         register_discovery_task = self._import()
         scheduler = _make_mock_scheduler(existing_task=None)
         with patch.dict(os.environ, {"CORTEX_DISCOVERY_AUTO": "1"}):
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 _run(register_discovery_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.schedule.hour, "3")
@@ -97,7 +97,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         existing = MagicMock()
         scheduler = _make_mock_scheduler(existing_task=existing)
         with patch.dict(os.environ, {"CORTEX_DISCOVERY_AUTO": "1"}):
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 _run(register_discovery_task())
         scheduler.add_task.assert_not_called()
 
@@ -107,7 +107,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         import python.helpers.cortex_discovery_scheduler as mod
         scheduler = _make_mock_scheduler(existing_task=None)
         with patch.dict(os.environ, {"CORTEX_DISCOVERY_AUTO": "1"}):
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 _run(register_discovery_task())
                 _run(register_discovery_task())  # second call
         # add_task called only once despite two calls
@@ -118,7 +118,7 @@ class TestRegisterDiscoveryTask(unittest.TestCase):
         register_discovery_task = self._import()
         scheduler = _make_mock_scheduler(existing_task=None)
         with patch.dict(os.environ, {"CORTEX_DISCOVERY_AUTO": "1"}):
-            with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+            with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
                 with patch("crontab.CronTab") as mock_crontab:
                     _run(register_discovery_task())
         # CronTab should not be instantiated with user=True
@@ -136,14 +136,14 @@ class TestRegisterWeeklyDigestTask(unittest.TestCase):
     def test_registers_when_no_existing_task(self):
         from python.helpers.cortex_weekly_digest import register_weekly_digest_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_weekly_digest_task())
         scheduler.add_task.assert_called_once()
 
     def test_task_name_correct(self):
         from python.helpers.cortex_weekly_digest import register_weekly_digest_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_weekly_digest_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.name, "CORTEX Weekly Digest")
@@ -151,7 +151,7 @@ class TestRegisterWeeklyDigestTask(unittest.TestCase):
     def test_schedule_is_sunday_02h(self):
         from python.helpers.cortex_weekly_digest import register_weekly_digest_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_weekly_digest_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.schedule.hour, "3")
@@ -160,7 +160,7 @@ class TestRegisterWeeklyDigestTask(unittest.TestCase):
     def test_dedup_skips_if_existing(self):
         from python.helpers.cortex_weekly_digest import register_weekly_digest_task
         scheduler = _make_mock_scheduler(existing_task=MagicMock())
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_weekly_digest_task())
         scheduler.add_task.assert_not_called()
 
@@ -169,13 +169,13 @@ class TestRegisterWeeklyDigestTask(unittest.TestCase):
         import inspect
         self.assertTrue(inspect.iscoroutinefunction(register_weekly_digest_task))
 
-    def test_system_prompt_set(self):
+    def test_callable_fn_set(self):
         from python.helpers.cortex_weekly_digest import register_weekly_digest_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_weekly_digest_task())
         task = scheduler.add_task.call_args[0][0]
-        self.assertTrue(len(task.system_prompt) > 10)
+        self.assertIsNotNone(task.callable_fn)
 
 
 # ---------------------------------------------------------------------------
@@ -187,14 +187,14 @@ class TestRegisterProactiveTask(unittest.TestCase):
     def test_registers_when_no_existing_task(self):
         from python.helpers.cortex_proactive_engine import register_proactive_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_proactive_task())
         scheduler.add_task.assert_called_once()
 
     def test_task_name_correct(self):
         from python.helpers.cortex_proactive_engine import register_proactive_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_proactive_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.name, "CORTEX Proactive Pulse")
@@ -202,7 +202,7 @@ class TestRegisterProactiveTask(unittest.TestCase):
     def test_schedule_is_every_30_min(self):
         from python.helpers.cortex_proactive_engine import register_proactive_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_proactive_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.schedule.minute, "*/30")
@@ -211,7 +211,7 @@ class TestRegisterProactiveTask(unittest.TestCase):
     def test_dedup_skips_if_existing(self):
         from python.helpers.cortex_proactive_engine import register_proactive_task
         scheduler = _make_mock_scheduler(existing_task=MagicMock())
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_proactive_task())
         scheduler.add_task.assert_not_called()
 
@@ -230,14 +230,14 @@ class TestRegisterBackupTask(unittest.TestCase):
     def test_registers_when_no_existing_task(self):
         from python.helpers.cortex_memory_backup import register_backup_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_backup_task())
         scheduler.add_task.assert_called_once()
 
     def test_task_name_correct(self):
         from python.helpers.cortex_memory_backup import register_backup_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_backup_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.name, "CORTEX Memory Backup")
@@ -245,7 +245,7 @@ class TestRegisterBackupTask(unittest.TestCase):
     def test_schedule_is_sunday_02h(self):
         from python.helpers.cortex_memory_backup import register_backup_task
         scheduler = _make_mock_scheduler(existing_task=None)
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_backup_task())
         task = scheduler.add_task.call_args[0][0]
         self.assertEqual(task.schedule.hour, "2")
@@ -254,7 +254,7 @@ class TestRegisterBackupTask(unittest.TestCase):
     def test_dedup_skips_if_existing(self):
         from python.helpers.cortex_memory_backup import register_backup_task
         scheduler = _make_mock_scheduler(existing_task=MagicMock())
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             _run(register_backup_task())
         scheduler.add_task.assert_not_called()
 
@@ -288,7 +288,7 @@ class TestRegisterSchedulersExtension(unittest.TestCase):
         agent.config.profile = "default"
         scheduler = _make_mock_scheduler()
 
-        with patch("python.helpers.task_scheduler.TaskScheduler.get", return_value=scheduler):
+        with patch("python.cortex.scheduler.TaskScheduler.get", return_value=scheduler):
             ext = CortexRegisterSchedulers(agent=agent)
             _run(ext.execute())
 

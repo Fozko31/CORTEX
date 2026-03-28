@@ -59,3 +59,4 @@ python-docx>=1.1.0          # Word document parsing (cortex_document_parser)
 openpyxl>=3.1.0             # Excel parsing (cortex_document_parser)
 langdetect>=1.0.9           # Language detection in TTS router (optional — heuristic fallback used if missing)
 azure-cognitiveservices-speech>=1.40.0  # Azure Neural TTS sl-SI (cortex_azure_tts)
+APScheduler>=3.10,<4.0

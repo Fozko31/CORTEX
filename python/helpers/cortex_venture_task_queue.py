@@ -205,10 +205,7 @@ class VentureTaskQueue:
     # ------------------------------------------------------------------
 
     async def register_with_scheduler(self, agent, task_id: str) -> dict:
-        """
-        Register a task in Agent Zero's TaskScheduler.
-        Uses same pattern as Phase E scheduler functions.
-        """
+        """Register a venture task via APScheduler."""
         task = self.get_task(task_id)
         if not task:
             return {"status": "error", "error": f"Task {task_id} not found"}
@@ -222,14 +219,25 @@ class VentureTaskQueue:
             if existing:
                 return {"status": "already_registered", "task_id": task_id}
 
-            scheduled = await ScheduledTask.create(
+            # Build a closure so the callable captures task identity
+            _tid = task_id
+            _slug = task["venture_slug"]
+            _tname = task["name"]
+
+            async def _venture_callable() -> None:
+                try:
+                    from python.helpers.cortex_venture_action_log import log_venture_action
+                    log_venture_action(
+                        venture_slug=_slug,
+                        action=f"scheduled_task:{_tname}",
+                        details={"task_id": _tid},
+                    )
+                except Exception:
+                    pass
+
+            scheduled = ScheduledTask.create(
                 name=task["name"],
-                system_prompt=(
-                    f"You are CORTEX, operating for venture '{task['venture_slug']}'. "
-                    f"Execute the scheduled task: {task['name']}. "
-                    f"Task type: {task['task_type']}."
-                ),
-                prompt=task["prompt"],
+                callable_fn=_venture_callable,
                 schedule=task["cadence"],
             )
             await scheduler.add_task(scheduled)

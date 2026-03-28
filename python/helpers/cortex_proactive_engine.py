@@ -283,19 +283,18 @@ async def register_proactive_task():
 
         task = ScheduledTask.create(
             name=task_name,
-            system_prompt=(
-                "You are CORTEX running a proactive background pulse. "
-                "Check for new relevant content across active venture spaces. "
-                "Surface actionable insights without being asked."
-            ),
-            prompt=(
-                "Run the proactive pulse now: "
-                "import and await python.helpers.cortex_proactive_engine.run_proactive_pulse(agent). "
-                "Surface any high-relevance findings to the user."
-            ),
+            callable_fn=_scheduled_proactive_pulse,
             schedule=schedule,
         )
 
         await scheduler.add_task(task)
+    except Exception:
+        pass
+
+
+async def _scheduled_proactive_pulse() -> None:
+    """Proactive pulse run — called directly by APScheduler (no agent context)."""
+    try:
+        await run_proactive_pulse(agent=None)
     except Exception:
         pass

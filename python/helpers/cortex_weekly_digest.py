@@ -200,15 +200,18 @@ async def register_weekly_digest_task():
 
         task = ScheduledTask.create(
             name=task_name,
-            system_prompt=DIGEST_SYSTEM_PROMPT,
-            prompt=(
-                "Run the weekly digest consolidation now: "
-                "import and await python.helpers.cortex_weekly_digest.run_weekly_digest(agent). "
-                "Report cross-venture patterns and refresh SurfSense summaries."
-            ),
+            callable_fn=_scheduled_weekly_digest,
             schedule=schedule,
         )
 
         await scheduler.add_task(task)
+    except Exception:
+        pass
+
+
+async def _scheduled_weekly_digest() -> None:
+    """Weekly digest run — called directly by APScheduler."""
+    try:
+        await run_weekly_digest(agent=None)
     except Exception:
         pass

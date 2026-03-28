@@ -114,7 +114,7 @@ def get_drift_summary(days: int = 90) -> dict:
 
 
 async def register_benchmark_task():
-    """Register the monthly benchmark run using Agent Zero TaskScheduler."""
+    """Register the monthly benchmark run via APScheduler."""
     try:
         from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
         scheduler = TaskScheduler.get()
@@ -127,8 +127,7 @@ async def register_benchmark_task():
         )
         task = ScheduledTask.create(
             name=task_name,
-            system_prompt="You are CORTEX running a scheduled monthly benchmark (Loop 4).",
-            prompt="Run the monthly quality benchmark: use the self_improve tool with operation='benchmark'.",
+            callable_fn=_scheduled_benchmark,
             schedule=schedule,
         )
         await scheduler.add_task(task)

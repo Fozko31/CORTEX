@@ -60,16 +60,7 @@ async def register_discovery_task(agent=None) -> None:
 
         task = ScheduledTask.create(
             name=_TASK_NAME,
-            system_prompt=(
-                "You are CORTEX running the autonomous discovery loop. "
-                "Your job is to scan configured target niches for venture opportunities "
-                "in fast mode and queue high-scoring candidates for review."
-            ),
-            prompt=(
-                "Run the autonomous discovery loop now. "
-                "Use the venture_discover tool with mode='autonomous'. "
-                "This scans all configured target niches in fast mode."
-            ),
+            callable_fn=_scheduled_discovery,
             schedule=schedule,
         )
 
@@ -79,6 +70,14 @@ async def register_discovery_task(agent=None) -> None:
 
     except Exception as e:
         print(f"[CORTEX discovery_scheduler] Could not register task: {e}")
+
+
+async def _scheduled_discovery() -> None:
+    """Daily discovery loop — called directly by APScheduler."""
+    try:
+        await run_discovery_loop(agent=None)
+    except Exception:
+        pass
 
 
 async def run_discovery_loop(agent=None, max_niches: int = 5) -> None:

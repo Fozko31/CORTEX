@@ -1,10 +1,66 @@
 from python.cortex.extension import Extension
+from python.cortex.config import CortexConfig
 
+
+# ---------------------------------------------------------------------------
+# Scheduled callables — APScheduler calls these directly (no agent context)
+# ---------------------------------------------------------------------------
+
+async def _loop1_self_improvement() -> None:
+    """Loop 1: Weekly self-improvement — aggregate struggles + send hypotheses to Telegram."""
+    try:
+        from python.helpers import cortex_struggle_aggregator as agg
+        hypotheses = agg.run(days=7, top_n=3)
+        if hypotheses:
+            telegram_msg = agg.format_for_telegram(hypotheses)
+            try:
+                from python.helpers.cortex_telegram_bot import TelegramBotHandler
+                await TelegramBotHandler().send_text(telegram_msg)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+async def _loop2_outcome_signals() -> None:
+    """Loop 2: Monthly outcome signal processing."""
+    try:
+        from python.helpers.cortex_optimization_signal import run_monthly_signal_processing
+        await run_monthly_signal_processing(agent=None)
+    except Exception:
+        pass
+
+
+async def _loop5_stack_research() -> None:
+    """Loop 5: Bi-monthly stack research + evaluation."""
+    try:
+        from python.helpers.cortex_stack_researcher import run_full_research
+        from python.helpers.cortex_stack_evaluator import run_full_evaluation
+        findings = await run_full_research()
+        results = await run_full_evaluation(findings)
+        flagged = [r for r in results.get("evaluations", [])
+                   if r.get("decision") in ("REPLACE_NOW", "INVESTIGATE")]
+        if flagged:
+            msg = "CORTEX Stack Research Alert\n" + "\n".join(
+                f"• {r['component']}: {r['decision']}" for r in flagged
+            )
+            try:
+                from python.helpers.cortex_telegram_bot import TelegramBotHandler
+                await TelegramBotHandler().send_text(msg)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Extension
+# ---------------------------------------------------------------------------
 
 class CortexRegisterSchedulers(Extension):
     async def execute(self, **kwargs) -> None:
         agent = self.agent
-        profile = getattr(agent.config, "profile", "") or ""
+        profile = CortexConfig.from_agent_config(agent.config).profile
         if not profile.startswith("cortex"):
             return
 
@@ -33,8 +89,6 @@ class CortexRegisterSchedulers(Extension):
             pass
 
         # ── Phase G: Self-Optimization Loops ──────────────────────────────
-        # All loops use Agent Zero TaskScheduler (not APScheduler directly).
-        # TaskScheduler tasks prompt CORTEX to run the tool — autonomous loop.
 
         # Loop 1: weekly self-improvement (Saturday 1am CET)
         try:
@@ -44,18 +98,11 @@ class CortexRegisterSchedulers(Extension):
             if not scheduler.get_task_by_name(task_name):
                 schedule = TaskSchedule(
                     minute="0", hour="1", day="*", month="*",
-                    weekday="6",  # Saturday
-                    timezone="CET",
+                    weekday="6", timezone="CET",
                 )
                 task = ScheduledTask.create(
                     name=task_name,
-                    system_prompt="You are CORTEX running the weekly self-improvement loop (Loop 1).",
-                    prompt=(
-                        "Run the weekly self-improvement analysis: use the self_improve tool "
-                        "with operation='trigger_analysis'. Then for each hypothesis returned, "
-                        "run operation='run_experiment'. Show the report and wait for approval "
-                        "before applying."
-                    ),
+                    callable_fn=_loop1_self_improvement,
                     schedule=schedule,
                 )
                 await scheduler.add_task(task)
@@ -74,11 +121,7 @@ class CortexRegisterSchedulers(Extension):
                 )
                 task = ScheduledTask.create(
                     name=task_name,
-                    system_prompt="You are CORTEX running the monthly outcome attribution loop (Loop 2).",
-                    prompt=(
-                        "Run monthly outcome signal processing: call run_monthly_signal_processing() "
-                        "from cortex_optimization_signal and report results via Telegram."
-                    ),
+                    callable_fn=_loop2_outcome_signals,
                     schedule=schedule,
                 )
                 await scheduler.add_task(task)
@@ -111,12 +154,7 @@ class CortexRegisterSchedulers(Extension):
                 )
                 task = ScheduledTask.create(
                     name=task_name,
-                    system_prompt="You are CORTEX running the bi-monthly technology stack research (Loop 5).",
-                    prompt=(
-                        "Run stack research: call run_full_research() from cortex_stack_researcher, "
-                        "then call run_full_evaluation() from cortex_stack_evaluator with the findings. "
-                        "Report any REPLACE_NOW or INVESTIGATE items via Telegram."
-                    ),
+                    callable_fn=_loop5_stack_research,
                     schedule=schedule,
                 )
                 await scheduler.add_task(task)
