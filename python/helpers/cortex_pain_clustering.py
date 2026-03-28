@@ -73,7 +73,7 @@ async def _cluster_via_llm(
     Cost: ~€0.001 per batch of 20.
     """
     from python.helpers.cortex_model_router import CortexModelRouter
-    from python.helpers.dirty_json import DirtyJson
+    from python.cortex.dirty_json import DirtyJson
 
     BATCH = 20
     theme_map: Dict[str, List[int]] = {}   # theme → list of original indices

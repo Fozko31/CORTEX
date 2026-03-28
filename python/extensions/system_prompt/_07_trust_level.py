@@ -1,5 +1,5 @@
-from python.helpers.extension import Extension
-from agent import LoopData
+from python.cortex.extension import Extension
+from python.cortex.loop_data import LoopData
 
 
 class CortexTrustRefresh(Extension):

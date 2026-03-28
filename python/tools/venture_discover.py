@@ -20,7 +20,7 @@ Modes:
 """
 
 import json
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 from python.helpers.print_style import PrintStyle
 
 

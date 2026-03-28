@@ -4,7 +4,7 @@ import os
 import time
 from datetime import datetime
 from typing import Optional
-from python.helpers.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
 
 
 class CortexProactiveEngine:
@@ -205,7 +205,7 @@ async def _tier1_classify(candidates: list, space_name: str, agent) -> list:
             message=doc_list,
             agent=agent,
         )
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
         relevant_titles = DirtyJson.parse_string(response)
         if isinstance(relevant_titles, list):
             return [d for d in candidates if d.title in relevant_titles]
@@ -263,7 +263,7 @@ def _store_findings_for_ui(agent, findings: list):
 
 async def register_proactive_task():
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+        from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
 
         scheduler = TaskScheduler.get()
         task_name = "CORTEX Proactive Pulse"

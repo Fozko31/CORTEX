@@ -33,7 +33,7 @@ async def summarize_session(agent) -> dict:
         response = await CortexModelRouter.call_routed_model(
             "summarization", system, trimmed, agent
         )
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
         parsed = DirtyJson.parse_string(response)
         if isinstance(parsed, dict):
             return {

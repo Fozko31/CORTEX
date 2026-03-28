@@ -13,7 +13,7 @@ Operations:
 
 import json
 import os
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 
 
 class TelegramOps(Tool):

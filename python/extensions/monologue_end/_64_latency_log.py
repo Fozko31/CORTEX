@@ -8,7 +8,7 @@ Turn count is a proxy for task complexity/latency — a task requiring 8+ turns
 before resolution is a latency hotspot regardless of wall-clock time.
 """
 
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 
 
 # Tasks that are clearly internal plumbing — don't log these

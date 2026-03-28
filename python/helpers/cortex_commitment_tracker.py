@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, date
 from typing import Optional
-from python.helpers.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
 
 
 _FILE = "cortex_commitments.json"

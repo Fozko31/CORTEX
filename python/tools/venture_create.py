@@ -32,7 +32,7 @@ import traceback
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 
 
 class VentureCreate(Tool):
@@ -605,7 +605,7 @@ class VentureCreate(Tool):
             raw = await CortexModelRouter.call_routed_model(
                 "classification", "You are a venture analysis assistant.", prompt, self.agent
             )
-            from python.helpers.dirty_json import DirtyJson
+            from python.cortex.dirty_json import DirtyJson
             return DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
         except Exception:
             return {"venture_type": "generic", "market": "global", "language": "en",
@@ -702,7 +702,7 @@ class VentureCreate(Tool):
             raw = await CortexModelRouter.call_routed_model(
                 "classification", "You are a venture scoring assistant.", prompt, self.agent
             )
-            from python.helpers.dirty_json import DirtyJson
+            from python.cortex.dirty_json import DirtyJson
             scores = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
             if isinstance(scores, dict):
                 dna.update_cvs(
@@ -745,7 +745,7 @@ class VentureCreate(Tool):
             raw = await CortexModelRouter.call_routed_model(
                 "classification", "You are a venture capability analyst.", prompt, self.agent
             )
-            from python.helpers.dirty_json import DirtyJson
+            from python.cortex.dirty_json import DirtyJson
             scores = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
             if isinstance(scores, dict):
                 dna.update_cvs(

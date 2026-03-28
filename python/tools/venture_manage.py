@@ -13,7 +13,7 @@ Actions:
 
 from __future__ import annotations
 
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 
 
 class VentureManage(Tool):

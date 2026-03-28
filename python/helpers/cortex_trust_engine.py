@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from python.helpers.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
 
 
 TRUST_DOMAINS = ["research", "spending", "irreversible", "communication", "code", "scheduling"]

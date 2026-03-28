@@ -7,8 +7,8 @@ Falls through silently on any error.
 """
 
 import re
-from python.helpers.extension import Extension
-from agent import LoopData
+from python.cortex.extension import Extension
+from python.cortex.loop_data import LoopData
 
 
 # Correction signal patterns → correction type label

@@ -9,8 +9,8 @@ has been extracted across all past sessions, with temporal context.
 Fires before SurfSense pull (_20) — graph memory is faster and more targeted.
 Result is injected into extras_persistent["cortex_graph_memory"].
 """
-from python.helpers.extension import Extension
-from agent import LoopData
+from python.cortex.extension import Extension
+from python.cortex.loop_data import LoopData
 
 
 _MIN_MESSAGE_LENGTH = 15

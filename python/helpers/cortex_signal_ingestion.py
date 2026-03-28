@@ -402,7 +402,7 @@ async def extract_structured_pain(
         return []
 
     from python.helpers.cortex_model_router import CortexModelRouter
-    from python.helpers.dirty_json import DirtyJson
+    from python.cortex.dirty_json import DirtyJson
 
     BATCH = 10
     enriched: List[PainSignal] = []

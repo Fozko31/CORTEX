@@ -1,7 +1,7 @@
 import asyncio
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 from python.helpers.defer import DeferredTask, THREAD_BACKGROUND
-from agent import LoopData
+from python.cortex.loop_data import LoopData
 
 
 class CortexSurfSensePush(Extension):

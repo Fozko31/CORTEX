@@ -21,7 +21,7 @@ from typing import Optional
 
 def _base_path() -> str:
     try:
-        from python.helpers.memory import abs_db_dir
+        from python.cortex.memory import abs_db_dir
         base = abs_db_dir("cortex_main")
     except Exception:
         base = os.path.join("usr", "memory", "cortex_main")

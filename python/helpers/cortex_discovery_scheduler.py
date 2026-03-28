@@ -41,7 +41,7 @@ async def register_discovery_task(agent=None) -> None:
         return
 
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+        from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
 
         scheduler = TaskScheduler.get()
 

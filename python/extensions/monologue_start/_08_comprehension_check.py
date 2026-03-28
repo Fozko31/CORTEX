@@ -28,7 +28,7 @@ User commands (handled in TelegramBotHandler, not here):
   "more" / "full breakdown"        → one-time detailed mode for current request
 """
 
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 from python.helpers.print_style import PrintStyle
 
 # Action verbs that trigger the comprehension check

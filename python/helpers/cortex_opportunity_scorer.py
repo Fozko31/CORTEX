@@ -72,7 +72,7 @@ async def score_opportunity(
     gate2_details: the raw dict from Gate 2's DeepSeek assessment.
     """
     from python.helpers.cortex_model_router import CortexModelRouter
-    from python.helpers.dirty_json import DirtyJson
+    from python.cortex.dirty_json import DirtyJson
 
     signals = candidate.source_signals
     pain_texts = " | ".join(s.extracted_pain for s in signals[:5]) if signals else ""

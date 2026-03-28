@@ -37,7 +37,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 
 
 # ---------------------------------------------------------------------------

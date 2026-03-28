@@ -11,7 +11,7 @@ Runs asynchronously via asyncio.ensure_future so it doesn't block the monologue.
 import asyncio
 import time
 
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 
 _PULSE_INTERVAL_SECS = 1800  # 30 minutes
 

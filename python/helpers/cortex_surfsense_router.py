@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 from typing import Optional
-from python.helpers.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
 
 CORE_SPACES = [
     "cortex_user_profile",
@@ -173,7 +173,7 @@ class CortexSurfSenseRouter:
             response = await CortexModelRouter.call_routed_model(
                 "classification", system, query[:500], agent
             )
-            from python.helpers.dirty_json import DirtyJson
+            from python.cortex.dirty_json import DirtyJson
             parsed = DirtyJson.parse_string(response)
             if isinstance(parsed, dict) and "spaces" in parsed:
                 spaces = parsed["spaces"]

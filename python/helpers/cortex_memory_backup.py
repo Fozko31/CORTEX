@@ -409,7 +409,7 @@ async def run_full_backup(agent=None) -> dict:
 async def register_backup_task() -> None:
     """Register weekly full backup via Agent Zero TaskScheduler."""
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+        from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
 
         scheduler = TaskScheduler.get()
         task_name = "CORTEX Memory Backup"

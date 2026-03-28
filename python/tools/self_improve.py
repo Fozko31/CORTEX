@@ -19,7 +19,7 @@ import asyncio
 import json
 from typing import Any, Optional
 
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 
 
 class SelfImprove(Tool):

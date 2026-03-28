@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 from typing import Optional
-from python.helpers.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
 
 
 DIGEST_SYSTEM_PROMPT = """You are CORTEX's weekly digest generator. Your job is to:
@@ -181,7 +181,7 @@ async def _refresh_space_summaries(agent, client, routing_index):
 
 async def register_weekly_digest_task():
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+        from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
 
         scheduler = TaskScheduler.get()
         task_name = "CORTEX Weekly Digest"

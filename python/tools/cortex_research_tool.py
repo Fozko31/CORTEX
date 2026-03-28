@@ -1,5 +1,5 @@
 import json
-from python.helpers.tool import Tool, Response
+from python.cortex.tool import Tool, Response
 from python.helpers.print_style import PrintStyle
 from python.helpers.cortex_research_orchestrator import CortexResearchOrchestrator
 

@@ -199,7 +199,7 @@ async def gate_1(
             agent,
         )
 
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
         assessment = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
 
         trend = assessment.get("market_trend", "stable")
@@ -277,7 +277,7 @@ async def gate_2(
     Returns: (GateResult, cvs_prescore, strategy_type)
     """
     from python.helpers.cortex_model_router import CortexModelRouter
-    from python.helpers.dirty_json import DirtyJson
+    from python.cortex.dirty_json import DirtyJson
 
     min_cvs = params.min_cvs_score if params else 45.0
     min_autonomy = params.min_ai_run_autonomy if params else 50.0

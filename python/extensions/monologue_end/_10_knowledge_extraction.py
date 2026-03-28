@@ -1,8 +1,8 @@
-from python.helpers.extension import Extension
-from python.helpers.memory import Memory
+from python.cortex.extension import Extension
+from python.cortex.memory import Memory
 from python.helpers import errors
 from python.helpers.defer import DeferredTask, THREAD_BACKGROUND
-from agent import LoopData
+from python.cortex.loop_data import LoopData
 
 
 class CortexKnowledgeExtraction(Extension):

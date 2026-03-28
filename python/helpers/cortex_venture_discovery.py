@@ -277,7 +277,7 @@ class CortexVentureScanner:
             raw = await CortexModelRouter.call_routed_model(
                 "classification", "You are a research gap analyst.", prompt, self.agent
             )
-            from python.helpers.dirty_json import DirtyJson
+            from python.cortex.dirty_json import DirtyJson
             gaps_data = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
             if not isinstance(gaps_data, list):
                 gaps_data = gaps_data.get("gaps", []) if isinstance(gaps_data, dict) else []
@@ -425,7 +425,7 @@ async def _parse_research_result(
         raw = await CortexModelRouter.call_routed_model(
             "classification", "You are a market research extraction assistant.", extraction_prompt, agent
         )
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
         data = DirtyJson.parse_string(raw) if isinstance(raw, str) else raw
         if not isinstance(data, dict):
             raise ValueError("not a dict")

@@ -9,8 +9,8 @@ Ensures CORTEX always knows which venture is active and its key facts,
 without reading the full DNA on every turn (only loads what it needs).
 """
 
-from python.helpers.extension import Extension
-from agent import LoopData
+from python.cortex.extension import Extension
+from python.cortex.loop_data import LoopData
 
 
 class CortexVentureContextLoad(Extension):

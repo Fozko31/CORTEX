@@ -1,4 +1,4 @@
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 
 
 class CortexRegisterSchedulers(Extension):
@@ -38,7 +38,7 @@ class CortexRegisterSchedulers(Extension):
 
         # Loop 1: weekly self-improvement (Saturday 1am CET)
         try:
-            from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+            from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
             scheduler = TaskScheduler.get()
             task_name = "CORTEX Loop1 Weekly Self-Improvement"
             if not scheduler.get_task_by_name(task_name):
@@ -64,7 +64,7 @@ class CortexRegisterSchedulers(Extension):
 
         # Loop 2: monthly outcome signal processing (20th of month, 3am CET)
         try:
-            from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+            from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
             scheduler = TaskScheduler.get()
             task_name = "CORTEX Loop2 Monthly Outcome Signals"
             if not scheduler.get_task_by_name(task_name):
@@ -101,7 +101,7 @@ class CortexRegisterSchedulers(Extension):
 
         # Loop 5: bi-monthly stack research (1st of odd months, 3am CET)
         try:
-            from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+            from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
             scheduler = TaskScheduler.get()
             task_name = "CORTEX Loop5 Bi-monthly Stack Research"
             if not scheduler.get_task_by_name(task_name):

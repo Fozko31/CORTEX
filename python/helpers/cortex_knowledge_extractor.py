@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
-from python.helpers.dirty_json import DirtyJson
+from python.cortex.dirty_json import DirtyJson
 
 
 @dataclass

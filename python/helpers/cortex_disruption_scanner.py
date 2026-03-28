@@ -278,7 +278,7 @@ async def discover_tools_independently(
     try:
         from python.helpers.cortex_exa_client import CortexExaClient
         from python.helpers.cortex_model_router import CortexModelRouter
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
 
         exa_key = os.getenv("EXA_API_KEY", "")
         exa = CortexExaClient(api_key=exa_key)
@@ -355,7 +355,7 @@ async def score_disruption_target(
     """
     from python.helpers.cortex_exa_client import CortexExaClient
     from python.helpers.cortex_model_router import CortexModelRouter
-    from python.helpers.dirty_json import DirtyJson
+    from python.cortex.dirty_json import DirtyJson
 
     exa_key = os.getenv("EXA_API_KEY", "")
     exa = CortexExaClient(api_key=exa_key)

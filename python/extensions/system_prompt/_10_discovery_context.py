@@ -9,7 +9,7 @@ Kept deliberately brief: queue size, top candidate, parked count.
 Full details are available via venture_discover tool on demand.
 """
 
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 
 
 class CortexDiscoveryContext(Extension):

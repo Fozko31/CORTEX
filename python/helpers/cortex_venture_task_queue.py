@@ -214,7 +214,7 @@ class VentureTaskQueue:
             return {"status": "error", "error": f"Task {task_id} not found"}
 
         try:
-            from python.helpers.task_scheduler import TaskScheduler, ScheduledTask
+            from python.cortex.scheduler import TaskScheduler, ScheduledTask
             scheduler = TaskScheduler.get(agent)
 
             # Dedup check
@@ -246,7 +246,7 @@ class VentureTaskQueue:
             return {"status": "error", "error": f"Task {task_id} not found"}
 
         try:
-            from python.helpers.task_scheduler import TaskScheduler
+            from python.cortex.scheduler import TaskScheduler
             scheduler = TaskScheduler.get(agent)
             existing = scheduler.get_task_by_name(task["name"])
             if existing:

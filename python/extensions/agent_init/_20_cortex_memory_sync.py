@@ -1,4 +1,4 @@
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 
 
 class CortexMemorySync(Extension):

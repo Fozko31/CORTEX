@@ -8,8 +8,8 @@ can surface them naturally in its next response.
 Marks findings as read after injection to avoid repeat surfacing.
 """
 
-from python.helpers.extension import Extension
-from agent import LoopData
+from python.cortex.extension import Extension
+from python.cortex.loop_data import LoopData
 
 
 class CortexProactiveAwareness(Extension):

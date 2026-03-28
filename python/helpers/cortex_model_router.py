@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, date
 from typing import Optional
-from python.helpers.memory import get_agent_memory_subdir, abs_db_dir
+from python.cortex.memory import get_agent_memory_subdir, abs_db_dir
 
 
 @dataclass

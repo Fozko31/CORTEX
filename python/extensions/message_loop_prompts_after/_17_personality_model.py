@@ -1,6 +1,6 @@
-from python.helpers.extension import Extension
+from python.cortex.extension import Extension
 from python.helpers import errors
-from agent import LoopData
+from python.cortex.loop_data import LoopData
 
 
 # Keywords used to classify task type for adaptive challenge_level.

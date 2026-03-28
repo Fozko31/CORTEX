@@ -193,7 +193,7 @@ async def map_adjacent_niches(
     """
     try:
         from python.helpers.cortex_model_router import CortexModelRouter
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
 
         prompt = (
             f"Niche: '{niche}' | Market: {market}\n\n"
@@ -242,7 +242,7 @@ async def discover_influencers_for_niche(
     try:
         from python.helpers.cortex_exa_client import CortexExaClient
         from python.helpers.cortex_model_router import CortexModelRouter
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
 
         exa_key = (
             getattr(getattr(agent, "config", None), "exa_api_key", "")
@@ -462,7 +462,7 @@ async def detect_switching_pattern(
     try:
         from python.helpers.cortex_exa_client import CortexExaClient
         from python.helpers.cortex_model_router import CortexModelRouter
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
 
         exa_key = os.getenv("EXA_API_KEY", "")
         exa = CortexExaClient(api_key=exa_key)
@@ -610,7 +610,7 @@ async def quick_scan_video(
     """
     try:
         from python.helpers.cortex_model_router import CortexModelRouter
-        from python.helpers.dirty_json import DirtyJson
+        from python.cortex.dirty_json import DirtyJson
 
         prompt = (
             f"Video title: '{title}'\n"
@@ -683,7 +683,7 @@ async def extract_intelligence(
     Runs only on videos that passed the first-pass combined score threshold.
     """
     from python.helpers.cortex_model_router import CortexModelRouter
-    from python.helpers.dirty_json import DirtyJson
+    from python.cortex.dirty_json import DirtyJson
 
     chunk = transcript[:_TRANSCRIPT_CHUNK]
 

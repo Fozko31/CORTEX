@@ -528,7 +528,7 @@ class TestSelfImproveTool:
     async def test_show_status_operation(self):
         """self_improve tool class is importable and inherits from Tool."""
         from python.tools.self_improve import SelfImprove
-        from python.helpers.tool import Tool
+        from python.cortex.tool import Tool
 
         # Verify class structure
         assert issubclass(SelfImprove, Tool)

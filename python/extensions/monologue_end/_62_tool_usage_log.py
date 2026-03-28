@@ -5,8 +5,8 @@ Runs at monologue_end. Reads tool call records set by the agent during the turn,
 then flushes them to cortex_event_store. Falls through silently on any error.
 """
 
-from python.helpers.extension import Extension
-from agent import LoopData
+from python.cortex.extension import Extension
+from python.cortex.loop_data import LoopData
 
 
 class CortexToolUsageLog(Extension):

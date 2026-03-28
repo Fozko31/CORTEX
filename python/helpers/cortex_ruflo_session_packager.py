@@ -124,7 +124,7 @@ def _build_session_summary(session, operational_report: dict) -> str:
 async def register_loop3_task():
     """Register bi-monthly Loop 3 trigger using Agent Zero TaskScheduler."""
     try:
-        from python.helpers.task_scheduler import TaskScheduler, ScheduledTask, TaskSchedule
+        from python.cortex.scheduler import TaskScheduler, ScheduledTask, TaskSchedule
         scheduler = TaskScheduler.get()
         task_name = "CORTEX Loop3 Bi-monthly Review"
         if scheduler.get_task_by_name(task_name):
